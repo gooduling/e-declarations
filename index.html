@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+body {
+    text-align: center;
+    font-family: SansSerif
+}
+    text {
+        font: 10px sans-serif;
+        text-anchor: middle;
+    }
+
+    .node circle {
+        fill: #ddd;
+    }
+
+    .node:hover circle {        
+        stroke-width: 1.2px;
+        fill: coral;
+    }
+    .viz {
+        display: inline-block;
+        margin: 0px;
+
+        text-align: center;
+        width: 45%;
+    }
+
+</style>
+<h1>Eлектронні декларації. Кеш.</h1>
+<p>
+    Просумовано капітал декларанта та його родини усіх видів та валют. Для наочності в кожній групі преведені лише перші сто найбагатших чиновників.
+    <br/>
+    Ім'я та посаду декларанта можна побачити при наведенні курсора.
+</p>
+<div class="viz">
+<h3>Судді</h3>
+<svg id="sudy" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+</div>
+<div class="viz">
+<h3>Прокурорські</h3>
+<svg id="prokurory" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+</div>
+<div class="viz">
+<h3>Слідчі</h3>
+<svg id="sledovateli" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+</div>
+<div class="viz">
+<h3>Всі</h3>
+<svg id="vse" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+    </div>
+<script src="d3.js"></script>
+<script>
+    draw("sudy", "Suddii.csv");
+    draw("prokurory", "prokurory.csv");
+    draw("sledovateli", "sledovateli.csv");
+    draw("vse", "cash.csv");
+function draw(id, fileName) {
+    var svg = d3.select("#"+id),
+            width = +svg.attr("width"),
+            height = +svg.attr("height");
+
+    function format(d, label) {
+        return d ? "\n" + label + ": " + Math.round(d / 1000) + "K" : ""
+    };
+
+    var pack = d3.pack()
+            .size([width - 2, height - 2])
+            .padding(3);
+    var totalSum = 0;
+    d3.csv(fileName, function (error, data) {
+        if (error) throw error;
+        var modyfiedData = data.map(function (i) {
+            var person = {
+                name: i.name,
+                id: i.uuid,
+                office: i.office,
+                uah: summCur(i, "UAH"),
+                usd: summCur(i, "USD"),
+                gbp: summCur(i, "GBP"),
+                eur: summCur(i, "EUR")
+            };
+            person.total = person.uah / 26 + person.usd + person.gbp * 1.2 + person.eur * 1.09;
+            return person;
+        })
+
+        function summCur(i, cur) {
+            var map = ["готівкові кошти", "кошти, розміщені на банківських рахунках", "інше", "кошти, позичені третім особам", "активи у дорогоцінних (банківських) металах", "внески до кредитних спілок та інших небанківських фінансових установ"]
+            var sum = 0;
+            map.forEach(function (name) {
+                var decl = i["Декларант/" + name + "/" + cur];
+                var rod = i["Родина/" + name + "/" + cur];
+                sum = sum + (!isNaN(+decl) ? +decl : 0) + (!isNaN(+rod) ? +rod : 0)
+                if (isNaN(sum)) {
+                    debugger
+                }
+            });
+            totalSum = totalSum + sum;
+            if (isNaN(totalSum)) {
+                debugger
+            }
+            return sum;
+        }
+
+        //console.debug(data, modyfiedData);
+        //console.debug(totalSum);
+        //debugger;
+        var root = d3.hierarchy({
+            children: modyfiedData.filter(function (i, n) {
+                return i.total
+            })
+        })
+                .sum(function (d) {
+                    return d.total;
+                })
+                .sort(function (a, b) {
+                    return b.value - a.value;
+                });
+        root.children = root.children.filter(function (i, n) {
+            return n < 100
+        });
+        //console.debug(root.children);
+        //debugger;
+        pack(root);
+
+
+        var node = svg.select("g")
+                .selectAll("g")
+                .data(root.children)
+                .enter().append("g")
+                .attr("transform", function (d) {
+                    return "translate(" + d.x + "," + d.y + ")";
+                })
+                .attr("class", "node");
+
+        node.append("circle")
+                .attr("id", function (d) {
+                    return "node-" + d.data.id;
+                })
+                .attr("r", function (d) {
+                    return d.r;
+                });
+
+        node.append("clipPath")
+                .attr("id", function (d) {
+                    return "clip-" + d.data.id;
+                })
+                .append("use")
+                .attr("xlink:href", function (d) {
+                    return "#node-" + d.data.id + "";
+                });
+
+//        node.append("text")
+//                .attr("clip-path", function(d) { return "url(#clip-" + d.data.name + ")"; })
+//                .selectAll("tspan")
+//                .data(function(d) { return d.data.name.split(".").pop().split(/(?=[A-Z][^A-Z])/g); })
+//                .enter().append("tspan")
+//                .attr("x", 0)
+//                .attr("y", function(d, i, nodes) { return 13 + (i - nodes.length / 2 - 0.5) * 10; })
+        //   .text(function(d) { return d; });
+        node.append("text").text(function (d) {
+            return "$" + Math.round(d.value / 1000) + "K"
+        });
+
+        node.append("title")
+                .text(function (d) {
+                    return d.data.name + "\n" + d.data.office + format(d.data.uah, "UAH") + format(d.data.usd, "USD") + format(d.data.eur, "EUR") + format(d.data.GBP, "GBP");
+                });
+    });
+}
+</script>
