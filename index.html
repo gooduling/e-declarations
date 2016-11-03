@@ -28,6 +28,7 @@ body {
 
         text-align: center;
         width: 45%;
+        vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
     }
 
 </style>
@@ -39,19 +40,23 @@ body {
 </p>
 <div class="viz">
 <h3>Судді</h3>
+<p id="sudy-loading-indicator">Завантаження...</p>
 <svg id="sudy" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
 <h3>Прокурорські</h3>
+<p id="prokurory-loading-indicator">Завантаження...</p>
 <svg id="prokurory" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
 <h3>Слідчі</h3>
+<p id="sledovateli-loading-indicator">Завантаження...</p>
 <svg id="sledovateli" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz" style="width:100%">
 <h3>Всі разом</h3>
 <p>Перші 300. Червоним - Верховна Рада України</p>
+<p id="vse-loading-indicator">Завантаження...</p>
 <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
     </div>
 <script src="d3.js"></script>
@@ -73,6 +78,11 @@ function draw(id, fileName, limit, matches) {
     var totalSum = 0;
     d3.csv(fileName, function (error, data) {
         if (error) throw error;
+
+        var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
+        //not using short element.remove() to support older browsers
+        loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
+
         var modyfiedData = data.map(function (i) {
             var person = {
                 name: i.name,
