@@ -181,7 +181,7 @@ var comaFormat = d3.format(",d");
 
         node.append("title")
                 .text(function (d) {
-                    return d.data.name + "\n" + d.data.office + format(d.data.uah, "UAH") + format(d.data.usd, "USD") + format(d.data.eur, "EUR") + format(d.data.GBP, "GBP");
+                    return d.data.name + "\n" + d.data.position + "\n" + d.data.office + format(d.data.uah, "UAH") + format(d.data.usd, "USD") + format(d.data.eur, "EUR") + format(d.data.GBP, "GBP");
                 });
     });
 }
