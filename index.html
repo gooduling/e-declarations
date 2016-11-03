@@ -14,6 +14,16 @@ body {
         fill: #ddd;
     }
 
+.node circle.deputat {
+    fill: #ff3f6a;
+}
+/*.node circle.prokuratura {*/
+    /*fill: #3d31ff;*/
+/*}*/
+/*.node circle.ministerstvo {*/
+    /*fill: #7aff6b;*/
+/*}*/
+
     .node:hover circle {        
         stroke-width: 1.2px;
         fill: coral;
@@ -31,7 +41,7 @@ body {
 <p>
     Просумовано капітал декларанта та його родини усіх видів та валют. Для наочності в кожній групі преведені лише перші сто найбагатших чиновників.
     <br/>
-    Ім'я та посаду декларанта можна побачити при наведенні курсора.
+    Ім'я та посаду декларанта можна побачити при наведенні курсора. 1K = 1000.
 </p>
 <div class="viz">
 <h3>Судді</h3>
@@ -45,17 +55,18 @@ body {
 <h3>Слідчі</h3>
 <svg id="sledovateli" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
-<div class="viz">
-<h3>Всі</h3>
-<svg id="vse" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+<div class="viz" style="width:100%">
+<h3>Всі разом</h3>
+<p>Перші 300. Червоним - Верховна Рада України</p>
+<svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
     </div>
 <script src="d3.js"></script>
 <script>
     draw("sudy", "Suddii.csv");
-    draw("prokurory", "prokurory.csv");
+    draw("prokurory", "prokurory2.csv");
     draw("sledovateli", "sledovateli.csv");
-    draw("vse", "cash.csv");
-function draw(id, fileName) {
+    draw("vse", "cash.csv", 300);
+function draw(id, fileName, limit, matches) {
     var svg = d3.select("#"+id),
             width = +svg.attr("width"),
             height = +svg.attr("height");
@@ -71,10 +82,12 @@ function draw(id, fileName) {
     d3.csv(fileName, function (error, data) {
         if (error) throw error;
         var modyfiedData = data.map(function (i) {
+           // if (i.name === "Басай Олег Вікторович") debugger;
             var person = {
                 name: i.name,
                 id: i.uuid,
                 office: i.office,
+                position: i.position,
                 uah: summCur(i, "UAH"),
                 usd: summCur(i, "USD"),
                 gbp: summCur(i, "GBP"),
@@ -117,7 +130,8 @@ function draw(id, fileName) {
                     return b.value - a.value;
                 });
         root.children = root.children.filter(function (i, n) {
-            return n < 100
+           // if (matches) debugger;
+            return (n < (limit || 100)) && (matches ? (!!~i.data.position.toLowerCase().search(matches[0]) || !!~i.data.position.toLowerCase().search(matches[1])) : true); //matches.map(function(m) {return i.data.position.toLocaleLowerCase().match(m)});
         });
         //console.debug(root.children);
         //debugger;
@@ -137,6 +151,9 @@ function draw(id, fileName) {
                 .attr("id", function (d) {
                     return "node-" + d.data.id;
                 })
+                .attr("class", function(d) {return ~["апарат верховної ради україни", "верховна рада україни", "верховна рада"].indexOf(d.data.office.toLowerCase()) ? "deputat"
+                        :~["генеральна прокуратура", "генеральна прокуратура україни"].indexOf(d.data.office.toLowerCase()) ? "prokuratura"
+                        : d.data.office.toLowerCase().match("міністерство") || d.data.office.toLowerCase().match("міністрів") ? "ministerstvo" : ""})
                 .attr("r", function (d) {
                     return d.r;
                 });
