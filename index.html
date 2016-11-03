@@ -14,15 +14,9 @@ body {
         fill: #ddd;
     }
 
-.node circle.deputat {
-    fill: #ff3f6a;
-}
-/*.node circle.prokuratura {*/
-    /*fill: #3d31ff;*/
-/*}*/
-/*.node circle.ministerstvo {*/
-    /*fill: #7aff6b;*/
-/*}*/
+    .node circle.deputat {
+        fill: #ff3f6a;
+    }
 
     .node:hover circle {        
         stroke-width: 1.2px;
@@ -66,14 +60,12 @@ body {
     draw("prokurory", "prokurory1.csv");
     draw("sledovateli", "sledovateli.csv");
     draw("vse", "cash.csv", 300);
+
 function draw(id, fileName, limit, matches) {
     var svg = d3.select("#"+id),
             width = +svg.attr("width"),
             height = +svg.attr("height");
-var comaFormat = d3.format(",d");
-    function format(d, label) {
-        return d ? "\n" + label + ": " + comaFormat(Math.round(d / 1000)) + "K" : ""
-    };
+    var comaFormat = d3.format(",d");
 
     var pack = d3.pack()
             .size([width - 2, height - 2])
@@ -82,7 +74,6 @@ var comaFormat = d3.format(",d");
     d3.csv(fileName, function (error, data) {
         if (error) throw error;
         var modyfiedData = data.map(function (i) {
-           // if (i.name === "Басай Олег Вікторович") debugger;
             var person = {
                 name: i.name,
                 id: i.uuid,
@@ -95,34 +86,13 @@ var comaFormat = d3.format(",d");
             };
             person.total = person.uah / 26 + person.usd + person.gbp * 1.2 + person.eur * 1.09;
             return person;
-        })
+        });
 
-        function summCur(i, cur) {
-            var map = ["готівкові кошти", "кошти, розміщені на банківських рахунках", "інше", "кошти, позичені третім особам", "активи у дорогоцінних (банківських) металах", "внески до кредитних спілок та інших небанківських фінансових установ"]
-            var sum = 0;
-            map.forEach(function (name) {
-                var decl = i["Декларант/" + name + "/" + cur];
-                var rod = i["Родина/" + name + "/" + cur];
-                sum = sum + (!isNaN(+decl) ? +decl : 0) + (!isNaN(+rod) ? +rod : 0)
-                if (isNaN(sum)) {
-                    debugger
-                }
-            });
-            totalSum = totalSum + sum;
-            if (isNaN(totalSum)) {
-                debugger
-            }
-            return sum;
-        }
-
-        //console.debug(data, modyfiedData);
-        //console.debug(totalSum);
-        //debugger;
         var root = d3.hierarchy({
-            children: modyfiedData.filter(function (i, n) {
-                return i.total
-            })
-        })
+                    children: modyfiedData.filter(function (i) {
+                        return i.total
+                    })
+                })
                 .sum(function (d) {
                     return d.total;
                 })
@@ -130,13 +100,9 @@ var comaFormat = d3.format(",d");
                     return b.value - a.value;
                 });
         root.children = root.children.filter(function (i, n) {
-           // if (matches) debugger;
             return (n < (limit || 100)) && (matches ? (!!~i.data.position.toLowerCase().search(matches[0]) || !!~i.data.position.toLowerCase().search(matches[1])) : true); //matches.map(function(m) {return i.data.position.toLocaleLowerCase().match(m)});
         });
-        //console.debug(root.children);
-        //debugger;
         pack(root);
-
 
         var node = svg.select("g")
                 .selectAll("g")
@@ -166,15 +132,6 @@ var comaFormat = d3.format(",d");
                 .attr("xlink:href", function (d) {
                     return "#node-" + d.data.id + "";
                 });
-
-//        node.append("text")
-//                .attr("clip-path", function(d) { return "url(#clip-" + d.data.name + ")"; })
-//                .selectAll("tspan")
-//                .data(function(d) { return d.data.name.split(".").pop().split(/(?=[A-Z][^A-Z])/g); })
-//                .enter().append("tspan")
-//                .attr("x", 0)
-//                .attr("y", function(d, i, nodes) { return 13 + (i - nodes.length / 2 - 0.5) * 10; })
-        //   .text(function(d) { return d; });
         node.append("text").text(function (d) {
             return "$" + comaFormat(Math.round(d.value / 1000)) + "K"
         });
@@ -184,5 +141,26 @@ var comaFormat = d3.format(",d");
                     return d.data.name + "\n" + d.data.position + "\n" + d.data.office + format(d.data.uah, "UAH") + format(d.data.usd, "USD") + format(d.data.eur, "EUR") + format(d.data.GBP, "GBP");
                 });
     });
+
+    function summCur(i, cur) {
+        var map = ["готівкові кошти", "кошти, розміщені на банківських рахунках", "інше", "кошти, позичені третім особам", "активи у дорогоцінних (банківських) металах", "внески до кредитних спілок та інших небанківських фінансових установ"]
+        var sum = 0;
+        map.forEach(function (name) {
+            var decl = i["Декларант/" + name + "/" + cur];
+            var rod = i["Родина/" + name + "/" + cur];
+            sum = sum + (!isNaN(+decl) ? +decl : 0) + (!isNaN(+rod) ? +rod : 0)
+            if (isNaN(sum)) {
+                debugger
+            }
+        });
+        totalSum = totalSum + sum;
+        if (isNaN(totalSum)) {
+            debugger
+        }
+        return sum;
+    }
+    function format(d, label) {
+        return d ? "\n" + label + ": " + comaFormat(Math.round(d / 1000)) + "K" : ""
+    }
 }
 </script>
