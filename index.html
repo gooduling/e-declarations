@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
-body {
-    text-align: center;
-    font-family: SansSerif
-}
+    @import url("https://fonts.googleapis.com/css?family=Open+Sans");
+    body {
+        text-align: center;
+        font-family: 'Open Sans', sans-serif;
+        /*font-size: 1.6rem;*/
+        /*color: #5f6d80;*/
+    }
     text {
-        font: 10px sans-serif;
+        font-size: 10px;
         text-anchor: middle;
+        cursor: pointer;
     }
 
     .node circle {
         fill: #ddd;
+        cursor: pointer;
     }
 
     .node circle.deputat {
@@ -30,33 +35,42 @@ body {
         width: 45%;
         vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
     }
+    .loading {
+        animation: blinker 1s linear infinite;
+        font-size: 1.5em;
+        margin: 50px;
+    }
+
+    @keyframes blinker {
+        50% { opacity: 0; }
+    }
 
 </style>
 <h1>Eлектронні декларації. Кеш.</h1>
-<p>
+<p class="description">
     Просумовано капітал декларанта та його родини усіх видів та валют. Для наочності в кожній групі преведені лише перші сто найбагатших чиновників.
     <br/>
     Ім'я та посаду декларанта можна побачити при наведенні курсора. 1K = 1000.
 </p>
 <div class="viz">
 <h3>Судді</h3>
-<p id="sudy-loading-indicator">Завантаження...</p>
+<p class="loading" id="sudy-loading-indicator">Завантаження...</p>
 <svg id="sudy" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
 <h3>Прокурорські</h3>
-<p id="prokurory-loading-indicator">Завантаження...</p>
+<p class="loading" id="prokurory-loading-indicator">Завантаження...</p>
 <svg id="prokurory" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
 <h3>Слідчі</h3>
-<p id="sledovateli-loading-indicator">Завантаження...</p>
+<p class="loading" id="sledovateli-loading-indicator">Завантаження...</p>
 <svg id="sledovateli" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz" style="width:100%">
 <h3>Всі разом</h3>
 <p>Перші 300. Червоним - Верховна Рада України</p>
-<p id="vse-loading-indicator">Завантаження...</p>
+<p class="loading" id="vse-loading-indicator">Завантаження...</p>
 <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
     </div>
 <script src="d3.js"></script>
