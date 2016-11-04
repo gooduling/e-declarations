@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
-    @import url("https://fonts.googleapis.com/css?family=Open+Sans");
+    @import url("https://fonts.googleapis.com/css?family=Pt+Sans");
     body {
         text-align: center;
-        font-family: 'Open Sans', sans-serif;
+        /*font-family: 'Open Sans', sans-serif;*/
         /*font-size: 1.6rem;*/
         /*color: #5f6d80;*/
+        font-family: 'PT Sans', serif;
+        font-weight: 300;
+        color: #000000;
+        font-size: 20px;
+        line-height: 1.55;
+
+    }
+    .description {
+        text-align: left;
+        max-width: 760px;
+        margin: 0 auto;
     }
     text {
         font-size: 10px;
@@ -23,14 +34,22 @@
         fill: #ff3f6a;
     }
 
+    .node circle.prokuratura{
+        fill: #3b38ff;
+    }
+    /*.node circle.ministerstvo {*/
+        /*fill: #ba54ff;*/
+    /*}*/
+
+
     .node:hover circle {        
         stroke-width: 1.2px;
-        fill: coral;
+        fill: #ff719a;
     }
     .viz {
         display: inline-block;
         margin: 0px;
-
+        min-width: 480px;
         text-align: center;
         width: 45%;
         vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
@@ -45,11 +64,19 @@
         50% { opacity: 0; }
     }
 
+    @media screen and (max-width: 1200px) {
+        body {
+            font-size: 18px;
+        }
+        .description {
+            max-width: 620px;
+        }
+    }
+
 </style>
 <h1>Eлектронні декларації. Кеш.</h1>
 <p class="description">
     Просумовано капітал декларанта та його родини усіх видів та валют. Для наочності в кожній групі преведені лише перші сто найбагатших чиновників.
-    <br/>
     Ім'я та посаду декларанта можна побачити при наведенні курсора. 1K = 1000.
 </p>
 <div class="viz">
@@ -58,7 +85,7 @@
 <svg id="sudy" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
-<h3>Прокурорські</h3>
+<h3>Прокурори</h3>
 <p class="loading" id="prokurory-loading-indicator">Завантаження...</p>
 <svg id="prokurory" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
@@ -141,12 +168,8 @@ function draw(id, fileName, limit, matches) {
                 .attr("id", function (d) {
                     return "node-" + d.data.id;
                 })
-                .attr("class", function(d) {return ~["апарат верховної ради україни", "верховна рада україни", "верховна рада"].indexOf(d.data.office.toLowerCase()) ? "deputat"
-                        :~["генеральна прокуратура", "генеральна прокуратура україни"].indexOf(d.data.office.toLowerCase()) ? "prokuratura"
-                        : d.data.office.toLowerCase().match("міністерство") || d.data.office.toLowerCase().match("міністрів") ? "ministerstvo" : ""})
-                .attr("r", function (d) {
-                    return d.r;
-                });
+                .attr("class", defineClassByOffice)
+                .attr("r", function (d) { return d.r});
 
         node.append("clipPath")
                 .attr("id", function (d) {
@@ -172,19 +195,22 @@ function draw(id, fileName, limit, matches) {
         map.forEach(function (name) {
             var decl = i["Декларант/" + name + "/" + cur];
             var rod = i["Родина/" + name + "/" + cur];
-            sum = sum + (!isNaN(+decl) ? +decl : 0) + (!isNaN(+rod) ? +rod : 0)
-            if (isNaN(sum)) {
-                debugger
-            }
+            sum = sum + (!isNaN(+decl) ? +decl : 0) + (!isNaN(+rod) ? +rod : 0);
         });
-        totalSum = totalSum + sum;
-        if (isNaN(totalSum)) {
-            debugger
-        }
         return sum;
     }
     function format(d, label) {
         return d ? "\n" + label + ": " + comaFormat(Math.round(d / 1000)) + "K" : ""
+    }
+
+    function defineClassByOffice(d) {
+        var prokuraturaMap = ["генеральна прокуратура", "генеральна прокуратура україни", "прокуратура"];
+        var deputatyMap = ["апарат верховної ради україни", "верховна рада україни", "верховна рада"];
+        var ofice = d.data.office.toLowerCase();
+        var position = d.data.position.toLowerCase();
+        return ~deputatyMap.indexOf(ofice) ? "deputat"
+            :~prokuraturaMap.indexOf(ofice) || ~ofice.search("прокур") || ~position.search("прокур") ? "prokuratura"
+            : ~ofice.search("мініст") || ~position.search("мініст") ? "ministerstvo" : "";
     }
 }
 </script>
