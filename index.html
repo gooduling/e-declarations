@@ -37,6 +37,9 @@
     .node circle.prokuratura{
         fill: #3b38ff;
     }
+    #vse .node circle.golova{
+        fill: #999;
+    }
     /*.node circle.ministerstvo {*/
         /*fill: #ba54ff;*/
     /*}*/
@@ -97,7 +100,7 @@
 </div>
 <div class="viz" style="width:100%">
 <h3>Всі разом</h3>
-<p>Перші 300. Червоним - Верховна Рада України.</p>
+<p>Перші 300. Червоним — Верховна Рада України. Темно-сірим — міські голови і голови ОДА</p>
 <p class="loading" id="vse-loading-indicator">Завантаження...</p>
 <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
     </div>
@@ -207,11 +210,21 @@ function draw(id, fileName, limit, matches) {
     function defineClassByOffice(d) {
         var prokuraturaMap = ["генеральна прокуратура", "генеральна прокуратура україни", "прокуратура"];
         var deputatyMap = ["апарат верховної ради україни", "верховна рада україни", "верховна рада"];
+        var golovaMap = ["міський голова"]; //["голова", "голови", "глава", "глави"];
         var ofice = d.data.office.toLowerCase();
         var position = d.data.position.toLowerCase();
-        return ~deputatyMap.indexOf(ofice) ? "deputat"
+        return ~deputatyMap.indexOf(ofice) || testAny(deputatyMap, ofice) ? "deputat"
             :~prokuraturaMap.indexOf(ofice) || ~ofice.search("прокур") || ~position.search("прокур") ? "prokuratura"
+            : testAny(golovaMap, ofice) || testAny(golovaMap, position) || ((~position.search("голова") || ~position.search("заступник голови") || ~position.search("заступник міського голови")) && (~position.search("адміністрації") || ~position.search("ода") || ~ofice.search("ода") || ~ofice.search("обласна рада") || ~ofice.search("адміністрації") )) ? "golova"
             : ~ofice.search("мініст") || ~position.search("мініст") ? "ministerstvo" : "";
+
+        function testAny(arr, str) {
+            var result = false;
+            arr.forEach(function(el) {
+                if (~str.search(el)) result = true
+            })
+            return result;
+        }
     }
 }
 </script>
