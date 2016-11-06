@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<script src="https://d3js.org/d3.v4.min.js"></script>
 <style>
-    @import url("https://fonts.googleapis.com/css?family=Pt+Sans");
+    @import url("https://fonts.googleapis.com/css?family=PT+Sans");
     body {
         text-align: center;
         /*font-family: 'Open Sans', sans-serif;*/
         /*font-size: 1.6rem;*/
         /*color: #5f6d80;*/
-        font-family: 'PT Sans', serif;
+        font-family: 'PT Sans', sans-serif;
         font-weight: 300;
         color: #000000;
         font-size: 20px;
         line-height: 1.55;
+        margin-left: 170px;
 
     }
     .description {
@@ -30,24 +32,19 @@
         cursor: pointer;
     }
 
-    .node circle.deputat {
+    .node circle.position-active {
         fill: #ff3f6a;
     }
 
-    .node circle.prokuratura{
-        fill: #3b38ff;
-    }
-    #vse .node circle.golova{
-        fill: #999;
-    }
-    /*.node circle.ministerstvo {*/
-        /*fill: #ba54ff;*/
-    /*}*/
+    .node circle.region-active {
+        stroke: #3630ff;
+        stroke-width: 2px;
 
+    }
 
     .node:hover circle {        
         stroke-width: 1.2px;
-        fill: #ff719a;
+        fill: #557fff;
     }
     .viz {
         display: inline-block;
@@ -57,6 +54,22 @@
         width: 45%;
         vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
     }
+    .selectWrapper select {
+        height: 30px;
+        padding-left: 10px;
+        box-shadow: none !important;
+        width: 150px;
+        margin-bottom: 20px;
+    }
+    .controls {
+        width: 200px;
+        display: inline-block;
+        font-size: 0.7em;
+        position: fixed;
+        left: 0;
+        top: 100px;
+    }
+
     .loading {
         animation: blinker 1s linear infinite;
         font-size: 1.5em;
@@ -76,88 +89,192 @@
         }
     }
 
+    @media screen and (max-width: 680px) {
+        body {
+            margin: 0
+        }
+        .controls {
+            position: static;
+        }
+    }
+
 </style>
 <!--<h1>Eлектронні декларації. Кеш.</h1>-->
 <!--<p class="description">-->
     <!--Просумовано капітал декларанта та його родини усіх видів та валют. Для наочності в кожній групі преведені лише перші сто найбагатших чиновників.-->
     <!--Ім'я та посаду декларанта можна побачити при наведенні курсора. 1K = 1000.-->
 <!--</p>-->
+<div class="controls">
+<div class="selectWrapper">
+    Виділення по областям
+    <select id="regionSelector" onchange="switchSelectionByRegions(this.value)" name="select">
+        <option value="" selected>Область не обрано</option>
+    </select>
+</div>
+<div class="selectWrapper">
+    Виділення по посаді
+    <select id="positionSelector" onchange="switchSelectionByPosition(this.value)">
+        <option value="deputat" selected>Верховна Рада</option>
+        <option value="ministerstvo">Міністерства</option>
+        <option value="golova">Голови місцевих Рад</option>
+        <option value="suddia">Cуддя</option>
+        <option value="prokuratura">Прокуратура</option>
+        <option value="slidchi">Слідчі</option>
+        <option value="inspector">Iнспектори</option>
+    </select>
+</div>
+    </div>
+
 <div class="viz">
-<h3>Судді</h3>
-<p class="loading" id="sudy-loading-indicator">Завантаження...</p>
-<svg id="sudy" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+    <h3>Судді</h3>
+    <p class="loading" id="suddi-loading-indicator">Завантаження...</p>
+    <svg id="suddi" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
-<h3>Прокурори</h3>
-<p class="loading" id="prokurory-loading-indicator">Завантаження...</p>
-<svg id="prokurory" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+    <h3>Прокурори</h3>
+    <p class="loading" id="prokurory-loading-indicator">Завантаження...</p>
+    <svg id="prokurory" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
-<h3>Слідчі</h3>
-<p>Синім - слідчі прокуратури.</p>
-<p class="loading" id="sledovateli-loading-indicator">Завантаження...</p>
-<svg id="sledovateli" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+    <h3>Слідчі, детективи</h3>
+    <p class="loading" id="slidchi-loading-indicator">Завантаження...</p>
+    <svg id="slidchi" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+</div>
+<div class="viz">
+    <h3>Інспектори</h3>
+    <p class="loading" id="inspector-loading-indicator">Завантаження...</p>
+    <svg id="inspector" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+</div>
+<div class="viz">
+    <h3>Голови місцевих рад</h3>
+    <p class="loading" id="golovy-loading-indicator">Завантаження...</p>
+    <svg id="golovy" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+</div>
+<div class="viz">
+    <h3>Міністерства</h3>
+    <p class="loading" id="ministerstvo-loading-indicator">Завантаження...</p>
+    <svg id="ministerstvo" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz" style="width:100%">
-<h3>Всі разом</h3>
-<p>Перші 300. Червоним — Верховна Рада України. Темно-сірим — міські голови і голови ОДА</p>
-<p class="loading" id="vse-loading-indicator">Завантаження...</p>
-<svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
-    </div>
-<script src="d3.js"></script>
+    <h3>Всі разом</h3>
+    <p>Перші 300</p>
+    <p class="loading" id="vse-loading-indicator">Завантаження...</p>
+    <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
+</div>
 <script>
-    draw("sudy", "suddi.csv");
-    draw("prokurory", "prokurory1.csv");
-    draw("sledovateli", "sledovateli.csv");
-    draw("vse", "cash.csv", 300);
+    var comaFormat = d3.format(",d");
+    var regionsArr = [
+        "Дніпропетровськ",
+        "Донецьк",
+        "Житомир",
+        "Закарпаття",
+        "Запоріжжя",
+        "Івано-Франківськ",
+        "Київ",
+        "Кіровоград",
+        "Севастополь",
+        "Крим",
+        "Львів",
+        "Миколаїв",
+        "Одеса",
+        "Полтава",
+        "Рівне",
+        "Суми",
+        "Тернопіль",
+        "Харків",
+        "Херсон",
+        "Хмельницький",
+        "Черкаси",
+        "Чернигів",
+        "Чернівці",
+        "Луганськ",
+        "Вінниця",
+        "Луцьк"
+    ];
+//Add options to regional selector
+var regionSelector = d3.select("#regionSelector");
+    regionsArr.forEach(function(i) {
+        regionSelector
+                .append("option")
+                .attr("value", i)
+                .text(i)
+    });
 
-function draw(id, fileName, limit, matches) {
+
+d3.csv("all-sorted.csv", function (error, data) {
+    if (error) throw error;
+
+    var suddiData = [];
+    var prokuroryData = [];
+    var slidchiData = [];
+    var golovyData = [];
+    var ministryData = [];
+    var inspectoryData = [];
+    var allData = data;
+    setTimeout(function() {draw("vse", allData, 300)}, 0);
+    setTimeout(renderSubGroups, 0);
+    
+function renderSubGroups() {
+    data.forEach(function (d) {
+        switch (d.professionGroup) {
+            case "suddia":
+                suddiData.push(d);
+                break;
+            case "prokuratura":
+                prokuroryData.push(d);
+                break;
+            case "ministerstvo":
+                ministryData.push(d);
+                break;
+            case "golova":
+                golovyData.push(d);
+                break;
+            case "slidchi":
+                slidchiData.push(d);
+                break
+            case "inspector":
+                inspectoryData.push(d);
+                break;
+        }
+    });
+
+    if (suddiData.length)  draw("suddi", suddiData);
+    if (prokuroryData.length)  draw("prokurory", prokuroryData);
+    if (slidchiData.length)  draw("slidchi", slidchiData);
+    if (golovyData.length)  draw("golovy", golovyData);
+    if (ministryData.length)  draw("ministerstvo", ministryData);
+    if (inspectoryData.length)  draw("inspector", inspectoryData);
+}
+});
+
+function draw(id, data, limit) {
+
+    var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
+    //not using short element.remove() to support older browsers
+    loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
+
     var svg = d3.select("#"+id),
             width = +svg.attr("width"),
             height = +svg.attr("height");
-    var comaFormat = d3.format(",d");
 
     var pack = d3.pack()
             .size([width - 2, height - 2])
             .padding(3);
-    var totalSum = 0;
-    d3.csv(fileName, function (error, data) {
-        if (error) throw error;
 
-        var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
-        //not using short element.remove() to support older browsers
-        loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
+    var root = d3.hierarchy({
+                children: data
+            })
+            .sum(function (d) {
+                return d.total;
+            })
+            .sort(function (a, b) {
+                return b.value - a.value;
+            });
 
-        var modyfiedData = data.map(function (i) {
-            var person = {
-                name: i.name,
-                id: i.uuid,
-                office: i.office,
-                position: i.position,
-                uah: summCur(i, "UAH"),
-                usd: summCur(i, "USD"),
-                gbp: summCur(i, "GBP"),
-                eur: summCur(i, "EUR")
-            };
-            person.total = person.uah / 26 + person.usd + person.gbp * 1.2 + person.eur * 1.09;
-            return person;
-        });
-
-        var root = d3.hierarchy({
-                    children: modyfiedData.filter(function (i) {
-                        return i.total
-                    })
-                })
-                .sum(function (d) {
-                    return d.total;
-                })
-                .sort(function (a, b) {
-                    return b.value - a.value;
-                });
-        root.children = root.children.filter(function (i, n) {
-            return (n < (limit || 100)) && (matches ? (!!~i.data.position.toLowerCase().search(matches[0]) || !!~i.data.position.toLowerCase().search(matches[1])) : true); //matches.map(function(m) {return i.data.position.toLocaleLowerCase().match(m)});
-        });
-        pack(root);
+    root.children = root.children.filter(function (i, n) {
+                return (n < (limit || 100))
+            });
+    pack(root);
 
         var node = svg.select("g")
                 .selectAll("g")
@@ -172,17 +289,9 @@ function draw(id, fileName, limit, matches) {
                 .attr("id", function (d) {
                     return "node-" + d.data.id;
                 })
-                .attr("class", defineClassByOffice)
+                .attr("class", function(d) {return d.data.professionGroup + " circle " + d.data.region })
                 .attr("r", function (d) { return d.r});
 
-        node.append("clipPath")
-                .attr("id", function (d) {
-                    return "clip-" + d.data.id;
-                })
-                .append("use")
-                .attr("xlink:href", function (d) {
-                    return "#node-" + d.data.id + "";
-                });
         node.append("text").text(function (d) {
             return "$" + comaFormat(Math.round(d.value / 1000)) + "K"
         });
@@ -191,40 +300,19 @@ function draw(id, fileName, limit, matches) {
                 .text(function (d) {
                     return d.data.name + "\n" + d.data.position + "\n" + d.data.office + format(d.data.uah, "UAH") + format(d.data.usd, "USD") + format(d.data.eur, "EUR") + format(d.data.GBP, "GBP");
                 });
-    });
-
-    function summCur(i, cur) {
-        var map = ["готівкові кошти", "кошти, розміщені на банківських рахунках", "інше", "кошти, позичені третім особам", "активи у дорогоцінних (банківських) металах", "внески до кредитних спілок та інших небанківських фінансових установ"]
-        var sum = 0;
-        map.forEach(function (name) {
-            var decl = i["Декларант/" + name + "/" + cur];
-            var rod = i["Родина/" + name + "/" + cur];
-            sum = sum + (!isNaN(+decl) ? +decl : 0) + (!isNaN(+rod) ? +rod : 0);
-        });
-        return sum;
-    }
-    function format(d, label) {
-        return d ? "\n" + label + ": " + comaFormat(Math.round(d / 1000)) + "K" : ""
-    }
-
-    function defineClassByOffice(d) {
-        var prokuraturaMap = ["генеральна прокуратура", "генеральна прокуратура україни", "прокуратура"];
-        var deputatyMap = ["апарат верховної ради україни", "верховна рада україни", "верховна рада"];
-        var golovaMap = ["міський голова"]; //["голова", "голови", "глава", "глави"];
-        var ofice = d.data.office.toLowerCase();
-        var position = d.data.position.toLowerCase();
-        return ~deputatyMap.indexOf(ofice) || testAny(deputatyMap, ofice) ? "deputat"
-            :~prokuraturaMap.indexOf(ofice) || ~ofice.search("прокур") || ~position.search("прокур") ? "prokuratura"
-            : testAny(golovaMap, ofice) || testAny(golovaMap, position) || ((~position.search("голова") || ~position.search("заступник голови") || ~position.search("заступник міського голови")) && (~position.search("адміністрації") || ~position.search("ода") || ~ofice.search("ода") || ~ofice.search("обласна рада") || ~ofice.search("адміністрації") )) ? "golova"
-            : ~ofice.search("мініст") || ~position.search("мініст") ? "ministerstvo" : "";
-
-        function testAny(arr, str) {
-            var result = false;
-            arr.forEach(function(el) {
-                if (~str.search(el)) result = true
-            })
-            return result;
-        }
-    }
+    switchSelectionByPosition("deputat");
 }
+
+function format(d, label) {
+    return d ? "\n" + label + ": " + comaFormat(Math.round(d / 1000)) + "K" : ""
+}
+
+function switchSelectionByRegions(value) {
+    d3.selectAll(".circle").classed("region-active", false);
+    d3.selectAll("." + value).classed("region-active", true);
+}
+    function switchSelectionByPosition(value) {
+        d3.selectAll(".circle").classed("position-active", false);
+        d3.selectAll("." + value).classed("position-active", true);
+    }
 </script>
