@@ -5,15 +5,11 @@
     @import url("https://fonts.googleapis.com/css?family=PT+Sans");
     body {
         text-align: center;
-        /*font-family: 'Open Sans', sans-serif;*/
-        /*font-size: 1.6rem;*/
-        /*color: #5f6d80;*/
         font-family: 'PT Sans', sans-serif;
         font-weight: 300;
         color: #000000;
         font-size: 20px;
         line-height: 1.55;
-        margin-left: 170px;
 
     }
     .description {
@@ -61,13 +57,10 @@
         width: 150px;
         margin-bottom: 20px;
     }
-    .controls {
+    .selectWrapper {
         width: 200px;
         display: inline-block;
         font-size: 0.7em;
-        position: fixed;
-        left: 0;
-        top: 100px;
     }
 
     .loading {
@@ -89,21 +82,7 @@
         }
     }
 
-    @media screen and (max-width: 680px) {
-        body {
-            margin: 0
-        }
-        .controls {
-            position: static;
-        }
-    }
-
 </style>
-<!--<h1>Eлектронні декларації. Кеш.</h1>-->
-<!--<p class="description">-->
-    <!--Просумовано капітал декларанта та його родини усіх видів та валют. Для наочності в кожній групі преведені лише перші сто найбагатших чиновників.-->
-    <!--Ім'я та посаду декларанта можна побачити при наведенні курсора. 1K = 1000.-->
-<!--</p>-->
 <div class="controls">
 <div class="selectWrapper">
     Виділення по областям
@@ -146,7 +125,7 @@
     <svg id="inspector" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
-    <h3>Голови місцевих рад</h3>
+    <h3>Голови місцевих і обласних рад</h3>
     <p class="loading" id="golovy-loading-indicator">Завантаження...</p>
     <svg id="golovy" width="500" height="500"><g transform="translate(1,1)"></g></svg>
 </div>
@@ -231,7 +210,7 @@ function renderSubGroups() {
                 break;
             case "slidchi":
                 slidchiData.push(d);
-                break
+                break;
             case "inspector":
                 inspectoryData.push(d);
                 break;
