@@ -12,10 +12,14 @@
         line-height: 1.55;
 
     }
-    .description {
+    .d3-tip {
+        background: #333;
+        border: 1px solid black;
+        color: #fff;
+        font-size: 0.7em;
         text-align: left;
-        max-width: 760px;
-        margin: 0 auto;
+        padding: 0.5em;
+        max-width: 300px;
     }
     text {
         font-size: 0.5em;
@@ -146,6 +150,11 @@
     <p class="loading" id="vse-loading-indicator">Завантаження...</p>
     <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
 </div>
+<div class="tooltip" id="tt1" style="position: absolute; opacity: 0">
+    <div id="scatterplot1" class="scatterplot-wrapper"></div>
+    <div class="tooltip-text"></div>
+</div>
+<script src="d3-tip.js"></script>
 <script>
     var comaFormat = d3.format(",d");
     var regionsArr = [
@@ -234,14 +243,23 @@ function renderSubGroups() {
 });
 
 function draw(id, data, limit) {
+    var tip = d3.tip()
+            .attr('class', 'd3-tip')
+            .html(generateTooltipContent)
+            .direction('se')
+            .offset([0, 3]);
 
     var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
     //not using short element.remove() to support older browsers
     loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
+
     var normalWidth = id === "vse" ? 900 : 500;
     var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - 20 : normalWidth;
     var svg = d3.select("#"+id);
-    svg.attr("width", windowWidth).attr("height", windowWidth);
+    svg
+        .attr("width", windowWidth)
+        .attr("height", windowWidth)
+        .call(tip);
 
     var width = height = windowWidth;
 
@@ -275,21 +293,30 @@ function draw(id, data, limit) {
 
         node.append("circle")
                 .attr("class", function(d) {return d.data.professionGroup + " circle " + d.data.region })
-                .attr("r", function (d) { return d.r});
+                .attr("r", function (d) { return d.r})
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide);
 
-        node.append("text").text(function (d) {
-            return "$" + comaFormat(Math.round(d.value / 1000)) + "K"
-        });
-
-        node.append("title")
+        node.append("text")
                 .text(function (d) {
-                    return d.data.name + "\n" + d.data.position + "\n" + d.data.office + format(d.data.uah, "UAH") + format(d.data.usd, "USD") + format(d.data.eur, "EUR") + format(d.data.GBP, "GBP");
-                });
+                    return "$" + comaFormat(Math.round(d.value / 1000)) + "K"
+                })
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide);
+
     switchSelectionByPosition("deputat");
 }
-
+    function generateTooltipContent (d) {
+        return "<div><b>" + d.data.name + "</b></div><hr/><div>"
+                + d.data.position + "</div><div>"
+                + d.data.office + "</div><div><hr/>"
+                + format(d.data.uah, "UAH") + "</div><div>"
+                + format(d.data.usd, "USD") + "</div><div>"
+                + format(d.data.eur, "EUR") + "</div><div>"
+                + format(d.data.GBP, "GBP"); + "</div>"
+    }
 function format(d, label) {
-    return d ? "\n" + label + ": " + comaFormat(Math.round(d / 1000)) + "K" : ""
+    return d ? label + ": " + comaFormat(Math.round(d / 1000)) + "K" : ""
 }
 
 function switchSelectionByRegions(value) {
