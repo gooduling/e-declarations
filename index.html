@@ -18,7 +18,7 @@
         margin: 0 auto;
     }
     text {
-        font-size: 10px;
+        font-size: 0.5em;
         text-anchor: middle;
         cursor: pointer;
     }
@@ -45,7 +45,6 @@
     .viz {
         display: inline-block;
         margin: 0px;
-        min-width: 480px;
         text-align: center;
         width: 45%;
         vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
@@ -76,8 +75,20 @@
         body {
             font-size: 18px;
         }
-        .description {
-            max-width: 620px;
+        text {
+            font-size: 0.6em;
+        }
+    }
+
+    @media screen and (max-width: 1000px) {
+        .viz {
+            width: 100%;
+        }
+    }
+
+    @media screen and (max-width: 600px) {
+        body {
+            font-size: 14px;
         }
     }
 
@@ -111,7 +122,7 @@
 <div class="viz">
     <h3>Голови місцевих і обласних рад</h3>
     <p class="loading" id="golovy-loading-indicator">Завантаження...</p>
-    <svg id="golovy" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+    <svg id="golovy"><g transform="translate(1,1)"></g></svg>
 </div>
 <div class="viz">
     <h3>Міністерства</h3>
@@ -165,6 +176,7 @@
         "Вінниця",
         "Луцьк"
     ];
+
 //Add options to regional selector
 var regionSelector = d3.select("#regionSelector");
     regionsArr.forEach(function(i) {
@@ -226,10 +238,12 @@ function draw(id, data, limit) {
     var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
     //not using short element.remove() to support older browsers
     loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
+    var normalWidth = id === "vse" ? 900 : 500;
+    var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - 20 : normalWidth;
+    var svg = d3.select("#"+id);
+    svg.attr("width", windowWidth).attr("height", windowWidth);
 
-    var svg = d3.select("#"+id),
-            width = +svg.attr("width"),
-            height = +svg.attr("height");
+    var width = height = windowWidth;
 
     var pack = d3.pack()
             .size([width - 2, height - 2])
