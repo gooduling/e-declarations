@@ -265,9 +265,6 @@ function draw(id, data, limit) {
                 .attr("class", "node");
 
         node.append("circle")
-                .attr("id", function (d) {
-                    return "node-" + d.data.id;
-                })
                 .attr("class", function(d) {return d.data.professionGroup + " circle " + d.data.region })
                 .attr("r", function (d) { return d.r});
 
