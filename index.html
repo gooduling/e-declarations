@@ -12,6 +12,7 @@
         line-height: 1.55;
 
     }
+
     .d3-tip {
         background: #333;
         border: 1px solid black;
@@ -52,6 +53,7 @@
         text-align: center;
         width: 45%;
         vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
+        position: relative;
     }
     .selectWrapper select {
         height: 30px;
@@ -66,9 +68,19 @@
     }
 
     .loading {
-        animation: blinker 1s linear infinite;
+        animation: blinker 1.5s linear infinite;
         font-size: 1.5em;
         margin: 50px;
+    }
+    .loading:before {
+        content:"";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: black;
+        opacity: 0.7;
     }
 
     @keyframes blinker {
@@ -253,8 +265,9 @@ function draw(id, data, limit) {
     //not using short element.remove() to support older browsers
     loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
 
-    var normalWidth = id === "vse" ? 900 : 500;
-    var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - 20 : normalWidth;
+    var isLargeChart = id === "vse";
+    var normalWidth = isLargeChart ? 900 : 500;
+    var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - (isLargeChart ? -50 : 20) : normalWidth;
     var svg = d3.select("#"+id);
     svg
         .attr("width", windowWidth)
@@ -299,7 +312,7 @@ function draw(id, data, limit) {
 
         node.append("text")
                 .text(function (d) {
-                    return "$" + comaFormat(Math.round(d.value / 1000)) + "K"
+                    return d.r > 9 ? "$" + comaFormat(Math.round(d.value / 1000)) + "K" : ""
                 })
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide);
