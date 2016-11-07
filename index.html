@@ -53,7 +53,7 @@
         text-align: center;
         width: 45%;
         vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
-        position: relative;
+        /*position: relative;*/
     }
     .selectWrapper select {
         height: 30px;
@@ -72,16 +72,16 @@
         font-size: 1.5em;
         margin: 50px;
     }
-    .loading:before {
-        content:"";
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: black;
-        opacity: 0.7;
-    }
+    /*.loading:before {*/
+        /*content:"";*/
+        /*position: absolute;*/
+        /*top: 0;*/
+        /*bottom: 0;*/
+        /*left: 0;*/
+        /*right: 0;*/
+        /*background: black;*/
+        /*opacity: 0.7;*/
+    /*}*/
 
     @keyframes blinker {
         50% { opacity: 0; }
@@ -312,7 +312,7 @@ function draw(id, data, limit) {
 
         node.append("text")
                 .text(function (d) {
-                    return d.r > 9 ? "$" + comaFormat(Math.round(d.value / 1000)) + "K" : ""
+                    return d.r > 7 ? "$" + comaFormat(Math.round(d.value / 1000)) + "K" : ""
                 })
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide);
