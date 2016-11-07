@@ -56,11 +56,10 @@
         box-shadow: none !important;
         width: 150px;
         margin-bottom: 20px;
+        margin-left: 20px;
     }
     .selectWrapper {
-        width: 200px;
-        display: inline-block;
-        font-size: 0.7em;
+
     }
 
     .loading {
@@ -83,27 +82,12 @@
     }
 
 </style>
-<div class="controls">
-<div class="selectWrapper">
-    Виділення по областям
+<div class="selectWrapper" style="width: 100%">
+    Оберіть виділення по областям:
     <select id="regionSelector" onchange="switchSelectionByRegions(this.value)" name="select">
         <option value="" selected>Область не обрано</option>
     </select>
 </div>
-<div class="selectWrapper">
-    Виділення по посаді
-    <select id="positionSelector" onchange="switchSelectionByPosition(this.value)">
-        <option value="deputat" selected>Верховна Рада</option>
-        <option value="ministerstvo">Міністерства</option>
-        <option value="golova">Голови місцевих Рад</option>
-        <option value="suddia">Cуддя</option>
-        <option value="prokuratura">Прокуратура</option>
-        <option value="slidchi">Слідчі</option>
-        <option value="inspector">Iнспектори</option>
-    </select>
-</div>
-    </div>
-
 <div class="viz">
     <h3>Судді</h3>
     <p class="loading" id="suddi-loading-indicator">Завантаження...</p>
@@ -136,7 +120,18 @@
 </div>
 <div class="viz" style="width:100%">
     <h3>Всі разом</h3>
-    <p>Перші 300</p>
+    <div class="selectWrapper">
+        Перші 300. Оберіть виділення по посаді:
+        <select id="positionSelector" onchange="switchSelectionByPosition(this.value)">
+            <option value="deputat" selected>Верховна Рада</option>
+            <option value="ministerstvo">Міністерства</option>
+            <option value="golova">Голови місцевих Рад</option>
+            <option value="suddia">Cуддя</option>
+            <option value="prokuratura">Прокуратура</option>
+            <option value="slidchi">Слідчі</option>
+            <option value="inspector">Iнспектори</option>
+        </select>
+    </div>
     <p class="loading" id="vse-loading-indicator">Завантаження...</p>
     <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
 </div>
