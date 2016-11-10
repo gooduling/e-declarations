@@ -7,7 +7,7 @@ var csv = require("fast-csv"),
 
 var emptyPerson = {
     name: "",
-    //id: "",
+    id: "",
     office: "",
     position: "",
     professionGroup: "",
@@ -23,7 +23,7 @@ var emptyPerson = {
 collectByField("e-all-sorted.csv");
 
 function collectByField (outputFileName) {
-    fs.createReadStream("cash.csv")
+    fs.createReadStream("source.csv")
         .pipe(csv.parse({headers: true}))
         //pipe the parsed input into a csv formatter
         .pipe(csv.format({headers: true}))
@@ -31,7 +31,7 @@ function collectByField (outputFileName) {
         .transform(function (row, next) {
             var person = {
                 name: row.name,
-                //id: row.uuid,
+                id: row.uuid,
                 office: row.office,
                 position: row.position,
                 professionGroup: defineProfessionGroup(row),
@@ -41,14 +41,21 @@ function collectByField (outputFileName) {
                 eur: summCur(row, "EUR")
             };
             person.total = Math.floor((person.uah || 0) / 26 + (person.usd || 0) + (person.gbp || 0) * 1.2 + (person.eur || 0) * 1.09);
-            if ((!person.professionGroup && person.total < 400000) || person.total < 24000)  {
+            //if person is out of any professional collection and has less 400000 (for general chart) or just has less than 24000 (for all charts)
+            if ((!person.professionGroup && person.total < 410000)
+                || (person.professionGroup ==='suddia' && person.total < 124000)
+                || (person.professionGroup ==='slidchi' && person.total < 26000)
+                || (person.professionGroup ==='deputat' && person.total < 410000)
+                || (person.professionGroup ==='prokuratura' && person.total < 88000)
+                || (person.professionGroup ==='inspector' && person.total < 21000)
+                || (person.professionGroup ==='golova' && person.total < 121000)
+                || (person.professionGroup ==='ministerstvo' && person.total < 90000) )  {
                 next(void 0, emptyPerson);
             }
             else {
-
-            person.region = findRegion(row);
-
-            next(void 0, person) }
+                person.region = findRegion(row);
+                next(void 0, person);
+            }
         })
         .pipe(fs.createWriteStream(outputFileName))
         .on("finish", () => {console.log("DONE")})

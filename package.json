@@ -1,0 +1,22 @@
+{
+  "name": "e-declarations",
+  "version": "1.0.0",
+  "description": "e-declaration",
+  "main": "d3-tip.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gooduling/e-declarations.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gooduling/e-declarations/issues"
+  },
+  "homepage": "https://github.com/gooduling/e-declarations#readme",
+  "dependencies": {
+    "fast-csv": "^2.3.0"
+  }
+}

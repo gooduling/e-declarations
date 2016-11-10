@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <script src="https://d3js.org/d3.v4.min.js"></script>
+
 <style>
     @import url("https://fonts.googleapis.com/css?family=PT+Sans");
     body {
@@ -169,6 +170,7 @@
 <script src="d3-tip.js"></script>
 <script>
     var comaFormat = d3.format(",d");
+    var nazkUrl = "https://public.nazk.gov.ua/declaration/";
     var regionsArr = [
         "Дніпропетровськ",
         "Донецьк",
@@ -208,7 +210,7 @@ var regionSelector = d3.select("#regionSelector");
     });
 
 
-d3.csv("all-sorted.csv", function (error, data) {
+d3.csv("e-all-sorted.csv", function (error, data) {
     if (error) throw error;
 
     var suddiData = [];
@@ -308,8 +310,11 @@ function draw(id, data, limit) {
                 .attr("class", function(d) {return d.data.professionGroup + " circle " + d.data.region })
                 .attr("r", function (d) { return d.r})
                 .on('mouseover', tip.show)
-                .on('mouseout', tip.hide);
-
+                .on('mouseout', tip.hide)
+                .on('dblclick', function(d) {
+                    console.log(d.data.id);
+                    window.open(nazkUrl + d.data.id);
+                })
         node.append("text")
                 .text(function (d) {
                     return d.r > 7 ? "$" + comaFormat(Math.round(d.value / 1000)) + "K" : ""
