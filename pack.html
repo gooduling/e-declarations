@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Pack</title>
+        <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
+        <style>
+            body {
+                font-family: 'PT Sans', sans-serif;
+            }
+            text {
+                font: 10pt sans-serif;
+                text-anchor: middle;
+            }
+
+            .node--hover:not(.node--root) circle {
+                fill-opacity:0.7
+            }
+            .d3-tip {
+                background: #333;
+                border: 1px solid black;
+                color: #fff;
+                font-size: 0.7em;
+                text-align: left;
+                padding: 0.5em;
+                max-width: 300px;
+            }
+            .auto-row {
+                font-size: 0.8em;
+                padding-left: 5px;
+            }
+
+        </style>
+    </head>
+    <body>
+    <h3>Найбагатші службовці країни</h3>
+    <p>З кожної професійної групи взято по 100 найзаможніших службовців. При підрахунку капіталу не враховано вартість нерухомості і автівок</p>
+    <h4>Зробіть подвійний клік на колі для переходу на повну сторінку декларації</h4>
+    <h4>Zoom In/Zoom Out</h4>
+        <svg width="800" height="800"><g transform="translate(1,1)"></g></svg>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <script src="d3-tip.js"></script>
+        <script>
+            const rootUrl = 'https://declarations.com.ua/declaration/';
+            const organizationMap = {
+                a: "Поліція",
+                b: "Місцеві адміністрації та ради",
+                c: "Фонд державного майна",
+                d: "Кабмін, міністерства та підлеглі органи",
+                e: "inspector",
+                f: "Інші державні служби, комісії, і т.п.",
+                g: "Без категорії",
+                h: "Прокуратура",
+                j: "Парламент",
+                k: "Слідчі",
+                l: "Пенсійний фонд",
+                m: "Тюрми",
+                n: "Лікарі",
+                p: "Суди",
+                q: "НБУ",
+                r: "Адміністрація / Секретаріат Президента",
+                s: "Держкомітет телебачення і радіомовлення",
+                t: "Мери",
+                u: "НАБУ",
+                v: "Ректори ВНЗ",
+                w: "Антимонопольний комітет",
+                x: "Рахункова палата",
+                y: "ЦВК",
+                z: "Вища рада юстиції",
+                o: "СБУ",
+                z2: "НАЗК",
+                '2': 'Силовий блок',
+                '1': "Різне",
+                "3": 'Центральна Влада',
+                "4": "Місцева влада"
+            };
+            var wrapperGroup;
+            var circleSize;
+            var groupsCounter = {};
+            'abcdefghijklmnoprqstuvwxyz'.split('').forEach(i=>groupsCounter[i] = 0);
+            //const groupsNodes = 'abcdefghijklmnoprqstuvwxyz'.split('').map(id=>({id, organization_group: 'global'}));
+            //const groupsNodes = 'abcdefghijklmnoprqstuvwxyz'.split('').map(id=>({id, organization_group: 'global'}));
+            const groupsNodes = '1234'.split('').map( id=>({ id, organization_group: 'global'}));
+            const parentPackNodes = groupsNodes.concat([
+                { id: 'global', organization_group: ''},
+                { id: 'n', organization_group: 'global'},
+                { id: 'v', organization_group: 'global'},
+                //{id: 'z2', super_group: 'global'}
+            ],
+                    'g'.split('').map( id=>({ id, organization_group: 'global'})),
+                    'kouhpema'.split('').map( id=>({ id, organization_group: '2'})),
+                    'rdj'.split('').map( id=>({ id, organization_group: 'global'})),
+                    'tb'.split('').map( id=>({ id, organization_group: 'global'})),);
+
+
+            var svg = d3.select("svg"),
+                width = +svg.attr("width"),
+                height = +svg.attr("height"),
+                tip = d3.tip()
+                    .attr('class', 'd3-tip')
+                    .html(generateTooltipContent)
+                    .direction('se')
+                    .offset([0, 3]);
+            var format = d3.format(",d");
+
+            var color = d3.scaleSequential(d3.interpolateMagma)
+                    .domain([-4, 4]);
+
+            var pack = d3.pack()
+                    .size([width - 2, height - 2])
+                    .padding(3);
+            svg.call(tip);
+
+            d3.csv("newfinalSorted2.csv", formatRow,  function(error, data) {
+                if (error) throw error;
+                data = data.concat(parentPackNodes);
+                var root = d3.stratify()
+                        .parentId(d => d.organization_group)
+                        (data)
+                        .sum(d => d.property_total)
+                        .sort((a, b) => b.value - a.value);
+
+                pack(root);
+
+                wrapperGroup = svg.select("g")
+                                .attr('class', 'sds')
+                var node =wrapperGroup .selectAll("g")
+                    .data(root.descendants())
+                    .enter().append("g")
+                    .attr("transform", d => "translate(" + d.x + "," + d.y + ")")
+                    .attr("class", d => "node" + (!d.children ? " node--leaf" : d.depth ? "" : " node--root"))
+                    .each(function(d) { d.node = this; })
+                    .on("mouseover", d => {tip.show(d); hovered(true)(d)})
+                    .on("mouseout", d => {tip.hide(d); hovered(false)(d)})
+                    .on('dblclick', function(d) {
+                        window.open(rootUrl + d.data.id);
+                    })
+
+                node.append("circle")
+                    .attr("id", d => "node-" + d.id)
+                    .attr("r", d => d.r)
+                    .style("fill", d => color(d.depth));
+
+                var leaf = node.filter(d => !d.children);
+
+                leaf.append("clipPath")
+                        .attr("id", d => "clip-" + d.id)
+                        .append("use")
+                        .attr("xlink:href", d => "#node-" + d.id + "");
+
+                leaf.append("text")
+                        .text(d => d.data.shortName)
+                        .style("font-size", d =>d.data.name ? 0.35*d.r:'10' )
+//                        .attr("clip-path", d => "url(#clip-" + d.id + ")")
+//                        .selectAll("tspan")
+//                        .data(function(d) {let name = d.data.name || d.id; return name.split(' '); })
+//                        .enter().append("tspan")
+//                        .attr("x", 0)
+//                        .attr("y", function(d, i, nodes) { return 13 + (i - nodes.length / 2 - 0.5) * 10; })
+//                        .style("font-size", d =>console.log(d) )
+//                        .text(function(d) {return d; });
+            });
+            svg.call(d3.zoom()
+                    .scaleExtent([1 / 2, 30])
+                    .on("zoom", zoomed));
+            let transform = d3.zoomIdentity;
+            function zoomed() {
+                wrapperGroup.attr("transform", d3.event.transform);
+            }
+            function hovered(hover) {
+                return function(d) {
+                    d3.selectAll(d.ancestors().map(d => d.node)).classed("node--hover", hover);
+                };
+            }
+            function generateTooltipContent (d) {
+                let html;
+                let auto = d.data.vehicles_names ? d.data.vehicles_names.split('/').filter(i=>i!=='null'): [];
+                if(d.data.name) {
+                    html = "<div><b>" + d.data.name + "</b></div><hr/><div>"
+                        + d.data.name_post + "</div><div>"
+                        + d.data.region + "</div><hr/><div>Капітал: "
+                        + format(d.data.property_total) + " грн.</div><div>Надходження за 2016р.: "
+                        + format(d.data.incomes) + " грн.</div><div>Земля у власності: "
+                        + format(d.data.land/1000) + " га.</div><div>Нерухомість у власності: "
+                        + format(d.data.apartments) + " м2.</div>"
+                            +(!auto.length? "": "<hr/><div>Наявні автомобілі (" + auto.length + "):</div>"
+                        + auto.map(i=>`<div class='auto-row'>${i.toUpperCase()}</div>`).join('') )
+                } else {
+                    html = "<div>" + organizationMap[d.data.id]+ "</div>"
+                }
+                return html
+            }
+            function formatRow(d) {
+                if (~'szxlywcfq'.indexOf(d.organization_group) || d.organization_group === 'z2') d.organization_group = 'g';
+//                if (~'kouhpem'.indexOf(d.organization_group)) d.organization_group = 'a';
+//                if (~'rd'.indexOf(d.organization_group)) d.organization_group = 'j';
+//                if (d.organization_group === 't') d.organization_group = 'b';
+                let nameArr = d.name.split(' ')
+                d.shortName = nameArr[0].slice(0, 9) //+ ' ' + nameArr[1][0] + '.';
+                return d;
+            }
+        </script>
+    </body>
+</html>
