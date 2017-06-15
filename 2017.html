@@ -16,9 +16,10 @@
                 font-size: 20px;
                 line-height: 1.55;
                 padding-right: 210px;
+                padding-bottom: 100px;
             }
             #filterpanel{
-                font-size: 0.9em;
+                font-size: 12px;
                 width: 180px;
                 height: 350px;
                 padding: 10px;
@@ -43,13 +44,13 @@
             }
 
             .d3-tip {
-                background: #333;
+                background: rgba(51, 51, 51, 0.85);
                 border: 1px solid black;
                 color: #fff;
-                font-size: 0.7em;
+                font-size: 12px;
                 text-align: left;
                 padding: 0.5em;
-                max-width: 300px;
+                max-width: 250px;
             }
             text {
                 font-size: 0.5em;
@@ -108,7 +109,7 @@
                 margin: 50px;
             }
             .name {
-                font-size: 1.5em;
+                font-size: 14px;
             }
 
             @keyframes blinker {
@@ -296,7 +297,7 @@
                 var tip = d3.tip()
                         .attr('class', 'd3-tip')
                         .html(generateTooltipContent)
-                        .direction('se')
+                        .direction('sw')
                         .offset([0, 3]);
 
                 var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
