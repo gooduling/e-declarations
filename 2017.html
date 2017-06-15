@@ -15,19 +15,21 @@
                 color: #000000;
                 font-size: 20px;
                 line-height: 1.55;
-
+                padding-right: 210px;
             }
             #filterpanel{
                 font-size: 0.9em;
-                width: 200px;
+                width: 180px;
                 height: 350px;
                 padding: 10px;
-                background: rgba(200,230,255,0.85);
+                background: rgba(236, 236, 236, 0.85);
                 position: fixed;
                 z-index: 9000;
                 right: 7px;
-                top: 40px;
+                bottom: 20px;
                 text-align: left;
+                border: 1px solid #ddd;
+                border-radius: 3px;
             }
 
             #filterpanel input, #filterpanel label {
@@ -44,7 +46,7 @@
                 background: #333;
                 border: 1px solid black;
                 color: #fff;
-                font-size: 0.9em;
+                font-size: 0.7em;
                 text-align: left;
                 padding: 0.5em;
                 max-width: 300px;
@@ -120,9 +122,9 @@
                 text {
                     font-size: 0.6em;
                 }
-            }
-
-            @media screen and (max-width: 1000px) {
+                #filterpanel {
+                    height: 300px;
+                }
                 .viz {
                     width: 100%;
                 }
@@ -135,7 +137,6 @@
                 #filterpanel{
                     position: relative;
                     top: 0;
-                    width: 400px;
                     margin: 0 auto;
                 }
             }
@@ -174,7 +175,7 @@
         <div class="selectWrapper" style="width: 100%">
 Для переходу на сторінку декларації клікніть на колі
         </div>
-    <div class="viz" style="width:100%">
+    <div class="viz" style="width:80%">
         <h3>Всі разом</h3>
         <p class="loading" id="vse-loading-indicator">Завантаження...</p>
         <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
@@ -302,7 +303,7 @@
                 if (loadingIndicatorElement) loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
 
                 var isLargeChart = id === "vse";
-                var normalWidth = isLargeChart ? 900 : 500;
+                var normalWidth = isLargeChart ? 800 : 500;
                 var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - (isLargeChart ? -50 : 20) : normalWidth;
                 var svg = d3.select("#"+id);
                 svg
