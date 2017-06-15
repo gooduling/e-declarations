@@ -111,7 +111,7 @@
                     .padding(3);
             svg.call(tip);
 
-            d3.csv("newfinalSorted2.csv", formatRow,  function(error, data) {
+            d3.csv("incomesFinalSorted.csv", formatRow,  function(error, data) {
                 if (error) throw error;
                 data = data.concat(parentPackNodes);
                 var root = d3.stratify()

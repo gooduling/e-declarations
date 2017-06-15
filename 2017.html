@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ua">
+    <head>
+        <meta charset="utf-8">
+        <title>E-declaration 2017</title>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <script src="d3-tip.js"></script>
+        <style>
+            @import url("https://fonts.googleapis.com/css?family=Inconsolata|Nixie+One");
+            body {
+                text-align: center;
+                font-family: 'Nixie One', cursive;
+                font-family: 'Inconsolata', monospace;
+                font-weight: 300;
+                color: #000000;
+                font-size: 20px;
+                line-height: 1.55;
+
+            }
+            #filterpanel{
+                font-size: 0.9em;
+                width: 200px;
+                height: 350px;
+                padding: 10px;
+                background: rgba(200,230,255,0.85);
+                position: fixed;
+                z-index: 9000;
+                right: 7px;
+                top: 40px;
+                text-align: left;
+            }
+
+            #filterpanel input, #filterpanel label {
+                cursor: pointer
+            }
+
+            select {
+                width: 180px;
+                height: 30px;
+                cursor: pointer
+            }
+
+            .d3-tip {
+                background: #333;
+                border: 1px solid black;
+                color: #fff;
+                font-size: 0.9em;
+                text-align: left;
+                padding: 0.5em;
+                max-width: 300px;
+            }
+            text {
+                font-size: 0.5em;
+                text-anchor: middle;
+                cursor: pointer;
+            }
+
+            .node circle {
+                fill: #fff;
+                cursor: pointer;
+            }
+
+            .node circle.position-active {
+                fill: #ff3f6a;
+                cursor: default;
+            }
+
+            circle.depth-0 {
+                fill: #51c1ff;
+                cursor: default;
+            }
+
+            .node circle.region-active {
+                stroke: #3630ff;
+                stroke-width: 2px;
+
+            }
+
+            .node:hover circle:not(.depth-0) {
+                stroke-width: 1.2px;
+                fill: #ffc978;
+            }
+            .viz {
+                display: inline-block;
+                margin: 0px;
+                text-align: center;
+                width: 45%;
+                vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
+                /*position: relative;*/
+            }
+            .selectWrapper select {
+                height: 30px;
+                padding-left: 10px;
+                box-shadow: none !important;
+                width: 150px;
+                margin-bottom: 20px;
+                margin-left: 20px;
+            }
+            .selectWrapper {
+                font-size: 0.9em;
+            }
+
+            .loading {
+                animation: blinker 1.5s linear infinite;
+                font-size: 1.5em;
+                margin: 50px;
+            }
+            .name {
+                font-size: 1.5em;
+            }
+
+            @keyframes blinker {
+                50% { opacity: 0; }
+            }
+
+            @media screen and (max-width: 1200px) {
+                body {
+                    font-size: 18px;
+                }
+                text {
+                    font-size: 0.6em;
+                }
+            }
+
+            @media screen and (max-width: 1000px) {
+                .viz {
+                    width: 100%;
+                }
+            }
+
+            @media screen and (max-width: 600px) {
+                body {
+                    font-size: 14px;
+                }
+                #filterpanel{
+                    position: relative;
+                    top: 0;
+                    width: 400px;
+                    margin: 0 auto;
+                }
+            }
+
+        </style>
+    </head>
+    <body>
+    <div id="filterpanel">
+        <form name="filters">
+            <label>Режим відображення</label><br/>
+            <input type="radio" name="showParameter" value='assets' checked id="assets-radio">
+            <label for="assets-radio">Капітал</label><br/>
+            <input type="radio" name="showParameter" value='incomes' id="incomes-radio">
+            <label for="incomes-radio">Надходження</label><br/>
+            <input type="radio" name="showParameter" value='land' id="land-radio">
+            <label for="land-radio">Земля</label><br/>
+            <input type="radio" name="showParameter" value='apartments' id="apartments-radio">
+            <label for="apartments-radio">Нерухомість</label><br/>
+            <hr/>
+            <label>Виділити за регіоном</label>
+            <select id="regionSelector" onchange="switchSelectionByRegions(this.value)" name="select">
+                <option value="" selected>Область не обрано</option>
+            </select>
+            <hr/>
+            <label>Виділити за професійною діяльністю</label>
+            <select id="positionSelector" onchange="switchSelectionByPosition(this.value)">
+                <option value="j" selected>Центральна влада</option>
+                <option value="b">Mісцева влада</option>
+                <option value="p">Cудді</option>
+                <option value="h">Прокурори</option>
+                <option value="n">Лікарі</option>
+                <option value="e">Iнспектори</option>
+            </select>
+        </form>
+    </div>
+        <div class="selectWrapper" style="width: 100%">
+Для переходу на сторінку декларації клікніть на колі
+        </div>
+    <div class="viz" style="width:100%">
+        <h3>Всі разом</h3>
+        <p class="loading" id="vse-loading-indicator">Завантаження...</p>
+        <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
+    </div>
+        <div class="viz" id="suddi-wrapper">
+            <h3>Судді</h3>
+            <p class="loading" id="suddi-loading-indicator">Завантаження...</p>
+            <svg id="suddi" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+        </div>
+        <div class="viz" id="prokurory-wrapper">
+            <h3>Прокурори</h3>
+            <p class="loading" id="prokurory-loading-indicator">Завантаження...</p>
+            <svg id="prokurory" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+        </div>
+
+    <div class="viz" id="miscevi_rady-wrapper">
+        <h3>Місцева влада</h3>
+        <p class="loading" id="miscevi_rady-loading-indicator">Завантаження...</p>
+        <svg id="miscevi_rady"><g transform="translate(1,1)"></g></svg>
+    </div>
+    <div class="viz" id="centr_vlada-wrapper">
+        <h3>Центральна влада</h3>
+        <p class="loading" id="centr_vlada-loading-indicator">Завантаження...</p>
+        <svg id="centr_vlada" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+    </div>
+    <div class="viz" id="inspector-wrapper">
+        <h3>Інспектори</h3>
+        <p class="loading" id="inspector-loading-indicator">Завантаження...</p>
+        <svg id="inspector" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+    </div>
+    <div class="viz" id="likari-wrapper">
+        <h3>Лікарі</h3>
+        <p class="loading" id="likari-loading-indicator">Завантаження...</p>
+        <svg id="likari" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+    </div>
+
+        <div class="tooltip" id="tt1" style="position: absolute; opacity: 0">
+            <div id="scatterplot1" class="scatterplot-wrapper"></div>
+            <div class="tooltip-text"></div>
+        </div>
+
+        <script>
+            const sourceFiles = {
+                incomes: "incomesFinalSorted2.csv",
+                assets: "",
+                land: "",
+                appartments: ""
+            };
+            const rootUrl = 'https://declarations.com.ua/declaration/';
+            const regionsArr =  [
+                'Харківська область',
+                'Львівська область',
+                'Чернівецька область',
+                'Донецька область',
+                '!не визначено',
+                'м. Київ',
+                'Миколаївська область',
+                'Дніпропетровська область',
+                'Житомирська область',
+                'Рівненська область',
+                'Одеська область',
+                'Київська область',
+                'Закарпатська область',
+                'Запорізька область',
+                'Черкаська область',
+                'Чернігівська область',
+                'Сумська область',
+                'Волинська область',
+                'Івано-Франківська область',
+                'Херсонська область',
+                'Хмельницька область',
+                'Тернопільська область',
+                'Полтавська область',
+                'Кіровоградська область',
+                'Луганська область',
+                'Вінницька область',
+                'Кримська Автономна Республіка'
+            ];
+            var allData = {};
+            var format = d3.format(",d");
+            var radiobuttons = document.filters.showParameter;
+
+            radiobuttons.forEach(item=>item.onclick = (e)=>getDataAndDraw(e.target.value));
+
+            //Add options to regional selector
+            var regionSelector = d3.select("#regionSelector");
+                regionsArr.forEach(function(i, n) {
+                    regionSelector
+                            .append("option")
+                            .attr("value", n)
+                            .text(i)
+                });
+            getDataAndDraw('assets');
+
+            function getDataAndDraw(parameter) {
+                if (!allData[parameter]) {
+                    d3.csv('set-' + parameter + '.csv', formatRow, function (error, data) {
+                        if (error) throw error;
+                        allData[parameter] = data;
+                        splitDataOnGroups(data, parameter);
+                        rerenderCharts(parameter);
+                    });
+//                    ['suddi', 'likari'].forEach(id=>{
+//                        var wrapper = d3.select(`#${id}-wrapper`);
+//                        wrapper.append('p')
+//                                .attr("class", "node")
+//                                .attr("id", `${id}-loading-indicator`)
+//                                .text('Завантаження')
+//                    })
+
+                } else {
+                    rerenderCharts(parameter);
+                }
+
+            }
+            function draw(id, data, limit, highlightParameter) {
+                d3.selectAll("#"+id + " > g > *").remove();
+                var tip = d3.tip()
+                        .attr('class', 'd3-tip')
+                        .html(generateTooltipContent)
+                        .direction('se')
+                        .offset([0, 3]);
+
+                var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
+                if (loadingIndicatorElement) loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
+
+                var isLargeChart = id === "vse";
+                var normalWidth = isLargeChart ? 900 : 500;
+                var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - (isLargeChart ? -50 : 20) : normalWidth;
+                var svg = d3.select("#"+id);
+                svg
+                    .attr("width", windowWidth)
+                    .attr("height", windowWidth)
+                    .call(tip);
+
+                var width = height = windowWidth;
+                var color = d3.scaleSequential(d3.interpolateCubehelixDefault)
+                        .domain([-3, 5]);
+
+                var pack = d3.pack()
+                        .size([width - 2, height - 2])
+                        .padding(3);
+
+                var root = d3.hierarchy({
+                    children: data
+                })
+                        .sum(function (d) {
+                            return d[highlightParameter];
+                        })
+                        .sort(function (a, b) {
+                            return b.value - a.value;
+                        });
+                console.log(root);
+                root.children = root.children.filter(function (i, n) {
+                    return (n < (limit || 100))
+                });
+                pack(root);
+
+                var node = svg.select("g")
+                        .selectAll("g")
+                        .data(root.descendants())
+                        .enter().append("g")
+                        .attr("transform", function (d) {
+                            return "translate(" + d.x + "," + d.y + ")";
+                        })
+                        .attr("class", "node");
+
+                node.append("circle")
+                    .attr("class", function(d) {return d.data.organization_group + "-job circle region-" + d.data.region + " depth-" + d.depth })
+                    .attr("r", function (d) {console.log(d); return d.r})
+                    .on('mouseover', (d) =>d.depth ? tip.show(d):null)
+                    .on('mouseout', tip.hide)
+                    .on('click', function(d) {
+                        window.open(rootUrl + d.data.id);
+                    })
+
+                node.append("text")
+                        .text(d => d.data.shortName)
+            .style("font-size", d =>d.data.name ? 0.35*d.r:'10' )
+            .on('mouseover', tip.show)
+                        .on('mouseout', tip.hide);
+
+                switchSelectionByPosition("j");
+            }
+            function splitDataOnGroups(data, key) {
+                allData
+                data.forEach(function (d) {
+                    switch (d.organization_group) {
+                        case "p":
+                            allData[key+'Suddi'] = allData[key+'Suddi'] || [];
+                            allData[key+'Suddi'].push(d);
+                            break;
+                        case "h":
+                            allData[key+'Prokurory'] = allData[key+'Prokurory'] || [];
+                            allData[key+'Prokurory'].push(d);
+                            break;
+                        case "b":
+                            allData[key+'miscevaVlada'] = allData[key+'miscevaVlada'] || [];
+                            allData[key+'miscevaVlada'].push(d);
+                            break;
+                        case "j":
+                            allData[key+'centralnaVlada'] = allData[key+'centralnaVlada'] || [];
+                            allData[key+'centralnaVlada'].push(d);
+                            break;
+                        case "n":
+                            allData[key+'likari'] = allData[key+'likari'] || [];
+                            allData[key+'likari'].push(d);
+                            break;
+                        case "e":
+                            allData[key+'inspectory'] = allData[key+'inspectory'] || [];
+                            allData[key+'inspectory'].push(d);
+                            break;
+                    }
+                });
+            }
+            function rerenderCharts(key) {
+                setTimeout(function() {draw("vse", allData[key], 300, key)}, 0);
+                draw("suddi", allData[key+'Suddi'], 100, key);
+                draw("prokurory", allData[key+'Prokurory'], 100, key);
+                draw("likari", allData[key+'likari'], 100, key);
+                draw("miscevi_rady", allData[key+'miscevaVlada'], 100, key);
+                draw("centr_vlada", allData[key+'centralnaVlada'], 100, key);
+                draw("inspector", allData[key+'inspectory'], 100, key);
+            }
+            function generateTooltipContent (d) {
+                let html='';
+                let auto = d.data.vehicles_names ? d.data.vehicles_names.split('/').filter(i=>i!=='null'): [];
+                if(d.data.name) {
+                    html = "<div class='name'>" + d.data.name + "</div><div>"
+                            + regionsArr[Number(d.data.region) - 1] + "</div><hr/><div>"
+                            + d.data.name_post + "</div><hr/><div><b>Капітал:</b> "
+                            + format(d.data.assets) + " грн.</div><div><b>Надходження за 2016р.:</b> "
+                            + format(d.data.incomes) + " грн.</div><div><b>Земля у власності:</b> "
+                            + format(d.data.land/1000) + " га.</div><div><b>Нерухомість у власності:</b> "
+                            + format(d.data.apartments) + " м2.</div>"
+                            +(!auto.length? "": "<hr/><div><b>Наявні автомобілі (" + auto.length + "):</b></div>"
+                            + auto.map(i=>`<div class='auto-row'>${i.toUpperCase()}</div>`).join('') )
+                } else {console.log(d); }
+                return html
+            }
+            function formatRow(d) {
+                if (d.organization_group === 't') d.organization_group = 'b';
+                if (~'dr'.indexOf(d.organization_group)) d.organization_group = 'j';
+//
+                let nameArr = d.name.split(' ')
+                d.shortName = nameArr[0].slice(0, 9) //+ ' ' + nameArr[1][0] + '.';
+                return d;
+            }
+            function switchSelectionByRegions(value) {
+            d3.selectAll(".circle").classed("region-active", false);
+            d3.selectAll(".region-" + value).classed("region-active", true);
+            }
+            function switchSelectionByPosition(value) {
+                d3.selectAll(".circle").classed("position-active", false);
+                d3.selectAll("." + value + '-job').classed("position-active", true);
+            }
+        </script>
+    </body>
+</html>
