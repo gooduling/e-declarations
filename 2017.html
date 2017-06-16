@@ -275,7 +275,7 @@
                 'Кримська Автономна Республіка'
             ];
             var allData = {};
-            var format = d3.format(",d");
+            var format = (d)=>d3.format(",d")(d).replace(/\,/gi, ' ');
             var radiobuttons = document.filters.showParameter;
             var vizContainers = d3.selectAll('.viz');
             radiobuttons.forEach(item=>item.onclick = (e)=>getDataAndDraw(e.target.value));
@@ -368,7 +368,7 @@
                         .attr("class", "node");
 
                 node.append("circle")
-                    .attr("class", function(d) {return d.data.organization_group + "-job circle region-" + d.data.region + " depth-" + d.depth })
+                    .attr("class", function(d) {return `${d.data.organization_group}-job circle region-${d.data.region} depth-${d.depth}` })
                     .attr("r", function (d) {return d.r})
                     .on('mouseover', (d) =>d.depth ? tip.show(d):null)
                     .on('mouseout', tip.hide)
@@ -377,13 +377,14 @@
                     })
 
                 node.append("text")
-                        .text(d => d.data.shortName)
-            .style("font-size", d =>d.data.name ? 0.35*d.r:'10' )
-            .on('mouseover', tip.show)
-                        .on('mouseout', tip.hide);
+                    .text(d => d.data.shortName)
+                    .style("font-size", d =>d.data.name ? 0.35*d.r:'10' )
+                    .on('mouseover', tip.show)
+                    .on('mouseout', tip.hide);
+
                 d3.select(`#${id}-wrapper`).classed('isLoading', false);
                 switchSelectionByPosition("j");
-                switchSelectionByRegions('6')
+                switchSelectionByRegions(regionSelector.node().value || '6')
             }
             function splitDataOnGroups(data, key) {
                 allData
@@ -431,14 +432,14 @@
                 if(d.data.name) {
                     html = "<div class='tip-inner " + activeKey + "'><div class='name'>" + d.data.name + "</div><div>"
                             + regionsArr[Number(d.data.region) - 1] + "</div><hr/><div>"
-                            + d.data.name_post + "</div><hr/><div><b>Капітал:</b> "
-                            + format(d.data.assets) + " грн.</div><div><b>Надходження за 2016р.:</b> "
-                            + format(d.data.incomes) + " грн.</div><div><b>Земля у власності:</b> "
-                            + format(d.data.land/1000) + " га.</div><div><b>Нерухомість у власності:</b> "
-                            + format(d.data.apartments) + " м2.</div></div>"
+                            + d.data.name_post + "</div><hr/><div><b>Капітал:</b><nobr> "
+                            + format(d.data.assets) + " грн.</nobr></div><div><b>Надходження за 2016р.:</b><nobr> "
+                            + format(d.data.incomes) + " грн.</nobr></div><div><b>Земля у власності:</b><nobr> "
+                            + format(d.data.land/1000) + " га.</nobr></div><div><b>Нерухомість у власності:</b><nobr> "
+                            + format(d.data.apartments) + " м2.</nobr></div></div>"
                             +(!auto.length? "": "<hr/><div><b>Наявні автомобілі (" + auto.length + "):</b></div>"
                             + auto.map(i=>`<div class='auto-row'>${i.toUpperCase()}</div>`).join('') )
-                } else {console.log(d); }
+                } else {}
                 return html
             }
             function formatRow(d) {
@@ -450,7 +451,6 @@
                 return d;
             }
             function switchSelectionByRegions(value) {
-                console.log(value);
             d3.selectAll(".circle").classed("region-active", false);
             d3.selectAll(".region-" + value).classed("region-active", true);
             }
