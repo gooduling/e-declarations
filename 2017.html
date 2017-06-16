@@ -20,7 +20,6 @@
             #filterpanel{
                 font-size: 0.8em;
                 width: 180px;
-                height: 300px;
                 padding: 10px;
                 background: rgba(255, 255, 255, 0.85);
                 position: fixed;
@@ -57,7 +56,7 @@
                 background: rgba(51, 51, 51, 0.85);
                 border: 1px solid black;
                 color: #fff;
-                font-size: 0.8em;
+                font-size: 0.6em;
                 text-align: left;
                 padding: 0.5em;
                 max-width: 250px;
@@ -144,7 +143,6 @@
                 }
                 #filterpanel{
                     width: auto;
-                    height: 125px;
                     left: 10px;
                     right: 10px
                 }
@@ -377,8 +375,8 @@
                     })
 
                 node.append("text")
-                    .text(d => d.data.shortName)
-                    .style("font-size", d =>d.data.name ? 0.35*d.r:'10' )
+                    .text(function (d) {return d.data.shortName})
+                    .style("font-size", function (d) {return d.data.name ? 0.35*Number(d.r) + 'px':'10px'} )//d.data.name ? 0.35*Number(d.r):'10'
                     .on('mouseover', tip.show)
                     .on('mouseout', tip.hide);
 
