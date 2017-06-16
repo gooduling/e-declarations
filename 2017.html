@@ -286,7 +286,7 @@
                     regionSelector
                             .append("option")
                             .attr("value", n+1)
-                            .property('selected', n === 5)
+                            //.property('selected', n === 5)
                             .text(i)
                 });
             getDataAndDraw('assets');
@@ -384,7 +384,8 @@
 
                 d3.select(`#${id}-wrapper`).classed('isLoading', false);
                 switchSelectionByPosition("j");
-                switchSelectionByRegions(regionSelector.node().value || '6')
+                var selectedRegion = regionSelector.node().value;
+                if (selectedRegion) switchSelectionByRegions(selectedRegion);
             }
             function splitDataOnGroups(data, key) {
                 allData
