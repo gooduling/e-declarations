@@ -179,7 +179,7 @@
                 <div>
                     <label>Режим відображення</label><br/>
                     <input type="radio" name="showParameter" value='assets' checked id="assets-radio">
-                    <label for="assets-radio">Капітал</label><br/>
+                    <label for="assets-radio">Рухоме майно</label><br/>
                     <input type="radio" name="showParameter" value='incomes' id="incomes-radio">
                     <label for="incomes-radio">Надходження</label><br/>
                     <input type="radio" name="showParameter" value='land' id="land-radio">
@@ -432,7 +432,7 @@
                 if(d.data.name) {
                     html = "<div class='tip-inner " + activeKey + "'><div class='name'>" + d.data.name + "</div><div>"
                             + regionsArr[Number(d.data.region) - 1] + "</div><hr/><div>"
-                            + d.data.name_post + "</div><hr/><div><b>Капітал:</b><nobr> "
+                            + d.data.name_post + "</div><hr/><div><b>Рухоме майно:</b><nobr> "
                             + format(d.data.assets) + " грн.</nobr></div><div><b>Надходження за 2016р.:</b><nobr> "
                             + format(d.data.incomes) + " грн.</nobr></div><div><b>Земля у власності:</b><nobr> "
                             + format(d.data.land/1000) + " га.</nobr></div><div><b>Нерухомість у власності:</b><nobr> "
