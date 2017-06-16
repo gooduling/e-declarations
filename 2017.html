@@ -6,11 +6,10 @@
         <script src="https://d3js.org/d3.v4.min.js"></script>
         <script src="d3-tip.js"></script>
         <style>
-            @import url("https://fonts.googleapis.com/css?family=Inconsolata|Nixie+One");
             body {
+                position: relative;
                 text-align: center;
-                font-family: 'Nixie One', cursive;
-                font-family: 'Inconsolata', monospace;
+                font-family: 'Trebuchet MS', Helvetica, Arial, sans-serif;
                 font-weight: 300;
                 color: #000000;
                 font-size: 20px;
@@ -19,17 +18,17 @@
                 padding-bottom: 100px;
             }
             #filterpanel{
-                font-size: 12px;
+                font-size: 0.8em;
                 width: 180px;
-                height: 350px;
+                height: 250px;
                 padding: 10px;
-                background: rgba(236, 236, 236, 0.85);
+                background: rgba(255, 255, 255, 0.85);
                 position: fixed;
                 z-index: 9000;
                 right: 7px;
-                bottom: 20px;
+                bottom: 10px;
                 text-align: left;
-                border: 1px solid #ddd;
+                border: 1px solid #bae0ff;
                 border-radius: 3px;
             }
 
@@ -47,11 +46,21 @@
                 background: rgba(51, 51, 51, 0.85);
                 border: 1px solid black;
                 color: #fff;
-                font-size: 12px;
+                font-size: 0.8rem;
                 text-align: left;
                 padding: 0.5em;
                 max-width: 250px;
             }
+            .name {
+                font-size: 1rem;
+            }
+            .tip-inner.assets div:nth-child(6),
+            .tip-inner.incomes div:nth-child(7),
+            .tip-inner.land div:nth-child(8),
+            .tip-inner.apartments div:nth-child(9) {
+                color: #ff3f6a
+            }
+
             text {
                 font-size: 0.5em;
                 text-anchor: middle;
@@ -65,7 +74,7 @@
 
             .node circle.position-active {
                 fill: #ff3f6a;
-                cursor: default;
+                cursor: pointer;
             }
 
             circle.depth-0 {
@@ -74,8 +83,8 @@
             }
 
             .node circle.region-active {
-                stroke: #3630ff;
-                stroke-width: 2px;
+                stroke: #000;
+                stroke-width: 3px;
 
             }
 
@@ -87,29 +96,18 @@
                 display: inline-block;
                 margin: 0px;
                 text-align: center;
-                width: 45%;
+                width: 100%;
                 vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
                 /*position: relative;*/
             }
-            .selectWrapper select {
-                height: 30px;
-                padding-left: 10px;
-                box-shadow: none !important;
-                width: 150px;
-                margin-bottom: 20px;
-                margin-left: 20px;
-            }
-            .selectWrapper {
-                font-size: 0.9em;
+            .viz.isLoading {
+                opacity: 0.5;
             }
 
             .loading {
                 animation: blinker 1.5s linear infinite;
                 font-size: 1.5em;
                 margin: 50px;
-            }
-            .name {
-                font-size: 14px;
             }
 
             @keyframes blinker {
@@ -124,9 +122,33 @@
                     font-size: 0.6em;
                 }
                 #filterpanel {
-                    height: 300px;
+                    height: 250px;
                 }
-                .viz {
+            }
+            @media screen and (max-width: 800px) {
+                body {
+                    font-size: 16px;
+                    padding-right: 0;
+                }
+                #filterpanel{
+                    width: auto;
+                    height: 100px;
+                    left: 10px;
+                    right: 10px
+                }
+                #filterpanel form {
+                    width: 100%;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: flex-end;
+                    justify-content: space-between;
+                }
+                #filterpanel div {
+                    max-height: 120px;
+                    width: 30%;
+                    border-bottom: none;
+                }
+                #filterpanel label, #filterpanel select {
                     width: 100%;
                 }
             }
@@ -135,96 +157,81 @@
                 body {
                     font-size: 14px;
                 }
-                #filterpanel{
-                    position: relative;
-                    top: 0;
-                    margin: 0 auto;
-                }
             }
 
         </style>
     </head>
     <body>
-    <div id="filterpanel">
-        <form name="filters">
-            <label>Режим відображення</label><br/>
-            <input type="radio" name="showParameter" value='assets' checked id="assets-radio">
-            <label for="assets-radio">Капітал</label><br/>
-            <input type="radio" name="showParameter" value='incomes' id="incomes-radio">
-            <label for="incomes-radio">Надходження</label><br/>
-            <input type="radio" name="showParameter" value='land' id="land-radio">
-            <label for="land-radio">Земля</label><br/>
-            <input type="radio" name="showParameter" value='apartments' id="apartments-radio">
-            <label for="apartments-radio">Нерухомість</label><br/>
-            <hr/>
-            <label>Виділити за регіоном</label>
-            <select id="regionSelector" onchange="switchSelectionByRegions(this.value)" name="select">
-                <option value="" selected>Область не обрано</option>
-            </select>
-            <hr/>
-            <label>Виділити за професійною діяльністю</label>
-            <select id="positionSelector" onchange="switchSelectionByPosition(this.value)">
-                <option value="j" selected>Центральна влада</option>
-                <option value="b">Mісцева влада</option>
-                <option value="p">Cудді</option>
-                <option value="h">Прокурори</option>
-                <option value="n">Лікарі</option>
-                <option value="e">Iнспектори</option>
-            </select>
-        </form>
-    </div>
-        <div class="selectWrapper" style="width: 100%">
-Для переходу на сторінку декларації клікніть на колі
+        <div id="filterpanel">
+            <form name="filters">
+                <div>
+                    <label>Режим відображення</label><br/>
+                    <input type="radio" name="showParameter" value='assets' checked id="assets-radio">
+                    <label for="assets-radio">Капітал</label><br/>
+                    <input type="radio" name="showParameter" value='incomes' id="incomes-radio">
+                    <label for="incomes-radio">Надходження</label><br/>
+                    <input type="radio" name="showParameter" value='land' id="land-radio">
+                    <label for="land-radio">Земля</label><br/>
+                    <input type="radio" name="showParameter" value='apartments' id="apartments-radio">
+                    <label for="apartments-radio">Нерухомість</label><br/>
+                </div>
+                <div>
+                    <label>Виділити за регіоном</label>
+                    <select id="regionSelector" onchange="switchSelectionByRegions(this.value)" name="select">
+                        <option value="" selected>Область не обрано</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Виділити за професійною діяльністю</label>
+                    <select id="positionSelector" onchange="switchSelectionByPosition(this.value)">
+                        <option value="j" selected>Центральна влада</option>
+                        <option value="b">Mісцева влада</option>
+                        <option value="p">Cудді</option>
+                        <option value="h">Прокурори</option>
+                        <option value="n">Лікарі</option>
+                        <option value="e">Iнспектори</option>
+                    </select>
+                </div>
+            </form>
         </div>
-    <div class="viz" style="width:80%">
-        <h3>Всі разом</h3>
-        <p class="loading" id="vse-loading-indicator">Завантаження...</p>
-        <svg id="vse" width="900" height="900"><g transform="translate(1,1)"></g></svg>
-    </div>
-        <div class="viz" id="suddi-wrapper">
-            <h3>Судді</h3>
-            <p class="loading" id="suddi-loading-indicator">Завантаження...</p>
-            <svg id="suddi" width="500" height="500"><g transform="translate(1,1)"></g></svg>
+        <div class="viz" id="vse-wrapper">
+            <h3>Всі разом</h3>
+            <p class="loading" id="vse-loading-indicator">Завантаження...</p>
+            <svg id="vse"><g transform="translate(1,1)"></g></svg>
         </div>
-        <div class="viz" id="prokurory-wrapper">
-            <h3>Прокурори</h3>
-            <p class="loading" id="prokurory-loading-indicator">Завантаження...</p>
-            <svg id="prokurory" width="500" height="500"><g transform="translate(1,1)"></g></svg>
-        </div>
+            <div class="viz" id="suddi-wrapper">
+                <h3>Судді</h3>
+                <p class="loading" id="suddi-loading-indicator">Завантаження...</p>
+                <svg id="suddi"><g transform="translate(1,1)"></g></svg>
+            </div>
+            <div class="viz" id="prokurory-wrapper">
+                <h3>Прокурори</h3>
+                <p class="loading" id="prokurory-loading-indicator">Завантаження...</p>
+                <svg id="prokurory"><g transform="translate(1,1)"></g></svg>
+            </div>
 
-    <div class="viz" id="miscevi_rady-wrapper">
-        <h3>Місцева влада</h3>
-        <p class="loading" id="miscevi_rady-loading-indicator">Завантаження...</p>
-        <svg id="miscevi_rady"><g transform="translate(1,1)"></g></svg>
-    </div>
-    <div class="viz" id="centr_vlada-wrapper">
-        <h3>Центральна влада</h3>
-        <p class="loading" id="centr_vlada-loading-indicator">Завантаження...</p>
-        <svg id="centr_vlada" width="500" height="500"><g transform="translate(1,1)"></g></svg>
-    </div>
-    <div class="viz" id="inspector-wrapper">
-        <h3>Інспектори</h3>
-        <p class="loading" id="inspector-loading-indicator">Завантаження...</p>
-        <svg id="inspector" width="500" height="500"><g transform="translate(1,1)"></g></svg>
-    </div>
-    <div class="viz" id="likari-wrapper">
-        <h3>Лікарі</h3>
-        <p class="loading" id="likari-loading-indicator">Завантаження...</p>
-        <svg id="likari" width="500" height="500"><g transform="translate(1,1)"></g></svg>
-    </div>
-
-        <div class="tooltip" id="tt1" style="position: absolute; opacity: 0">
-            <div id="scatterplot1" class="scatterplot-wrapper"></div>
-            <div class="tooltip-text"></div>
+        <div class="viz" id="misceva_vlada-wrapper">
+            <h3>Місцева влада</h3>
+            <p class="loading" id="misceva_vlada-loading-indicator">Завантаження...</p>
+            <svg id="misceva_vlada"><g transform="translate(1,1)"></g></svg>
+        </div>
+        <div class="viz" id="centr_vlada-wrapper">
+            <h3>Центральна влада</h3>
+            <p class="loading" id="centr_vlada-loading-indicator">Завантаження...</p>
+            <svg id="centr_vlada"><g transform="translate(1,1)"></g></svg>
+        </div>
+        <div class="viz" id="inspector-wrapper">
+            <h3>Інспектори</h3>
+            <p class="loading" id="inspector-loading-indicator">Завантаження...</p>
+            <svg id="inspector"><g transform="translate(1,1)"></g></svg>
+        </div>
+        <div class="viz" id="likari-wrapper">
+            <h3>Лікарі</h3>
+            <p class="loading" id="likari-loading-indicator">Завантаження...</p>
+            <svg id="likari"><g transform="translate(1,1)"></g></svg>
         </div>
 
         <script>
-            const sourceFiles = {
-                incomes: "incomesFinalSorted2.csv",
-                assets: "",
-                land: "",
-                appartments: ""
-            };
             const rootUrl = 'https://declarations.com.ua/declaration/';
             const regionsArr =  [
                 'Харківська область',
@@ -258,7 +265,7 @@
             var allData = {};
             var format = d3.format(",d");
             var radiobuttons = document.filters.showParameter;
-
+            var vizContainers = d3.selectAll('.viz');
             radiobuttons.forEach(item=>item.onclick = (e)=>getDataAndDraw(e.target.value));
 
             //Add options to regional selector
@@ -272,6 +279,18 @@
             getDataAndDraw('assets');
 
             function getDataAndDraw(parameter) {
+//                ['vse', 'suddi', 'prokurory', 'misceva_vlada', 'centr_vlada', 'likari', 'inspectory'].forEach(id=>{
+//                    var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
+//                if(!loadingIndicatorElement) {
+//                   // d3.selectAll("#"+id + " > g > *").remove();
+//                    var wrapper = d3.select(`#${id}-wrapper`);
+//                    wrapper.insert('p',':nth-child(2)')
+//                            .attr("class", "loading")
+//                            .attr("id", `${id}-loading-indicator`)
+//                            .text('Завантаження');
+//                }
+//            })
+                vizContainers.classed('isLoading', true);
                 if (!allData[parameter]) {
                     d3.csv('set-' + parameter + '.csv', formatRow, function (error, data) {
                         if (error) throw error;
@@ -279,13 +298,6 @@
                         splitDataOnGroups(data, parameter);
                         rerenderCharts(parameter);
                     });
-//                    ['suddi', 'likari'].forEach(id=>{
-//                        var wrapper = d3.select(`#${id}-wrapper`);
-//                        wrapper.append('p')
-//                                .attr("class", "node")
-//                                .attr("id", `${id}-loading-indicator`)
-//                                .text('Завантаження')
-//                    })
 
                 } else {
                     rerenderCharts(parameter);
@@ -294,9 +306,10 @@
             }
             function draw(id, data, limit, highlightParameter) {
                 d3.selectAll("#"+id + " > g > *").remove();
+
                 var tip = d3.tip()
                         .attr('class', 'd3-tip')
-                        .html(generateTooltipContent)
+                        .html((d)=>generateTooltipContent(d, highlightParameter))
                         .direction('sw')
                         .offset([0, 3]);
 
@@ -304,8 +317,8 @@
                 if (loadingIndicatorElement) loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
 
                 var isLargeChart = id === "vse";
-                var normalWidth = isLargeChart ? 800 : 500;
-                var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - (isLargeChart ? -50 : 20) : normalWidth;
+                var normalWidth = isLargeChart ? 700 : 700;
+                var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - (isLargeChart ? 20 : 20) : normalWidth;
                 var svg = d3.select("#"+id);
                 svg
                     .attr("width", windowWidth)
@@ -313,8 +326,6 @@
                     .call(tip);
 
                 var width = height = windowWidth;
-                var color = d3.scaleSequential(d3.interpolateCubehelixDefault)
-                        .domain([-3, 5]);
 
                 var pack = d3.pack()
                         .size([width - 2, height - 2])
@@ -329,7 +340,6 @@
                         .sort(function (a, b) {
                             return b.value - a.value;
                         });
-                console.log(root);
                 root.children = root.children.filter(function (i, n) {
                     return (n < (limit || 100))
                 });
@@ -346,7 +356,7 @@
 
                 node.append("circle")
                     .attr("class", function(d) {return d.data.organization_group + "-job circle region-" + d.data.region + " depth-" + d.depth })
-                    .attr("r", function (d) {console.log(d); return d.r})
+                    .attr("r", function (d) {return d.r})
                     .on('mouseover', (d) =>d.depth ? tip.show(d):null)
                     .on('mouseout', tip.hide)
                     .on('click', function(d) {
@@ -358,7 +368,7 @@
             .style("font-size", d =>d.data.name ? 0.35*d.r:'10' )
             .on('mouseover', tip.show)
                         .on('mouseout', tip.hide);
-
+                d3.select(`#${id}-wrapper`).classed('isLoading', false);
                 switchSelectionByPosition("j");
             }
             function splitDataOnGroups(data, key) {
@@ -397,21 +407,21 @@
                 draw("suddi", allData[key+'Suddi'], 100, key);
                 draw("prokurory", allData[key+'Prokurory'], 100, key);
                 draw("likari", allData[key+'likari'], 100, key);
-                draw("miscevi_rady", allData[key+'miscevaVlada'], 100, key);
+                draw("misceva_vlada", allData[key+'miscevaVlada'], 100, key);
                 draw("centr_vlada", allData[key+'centralnaVlada'], 100, key);
                 draw("inspector", allData[key+'inspectory'], 100, key);
             }
-            function generateTooltipContent (d) {
+            function generateTooltipContent (d, activeKey) {
                 let html='';
                 let auto = d.data.vehicles_names ? d.data.vehicles_names.split('/').filter(i=>i!=='null'): [];
                 if(d.data.name) {
-                    html = "<div class='name'>" + d.data.name + "</div><div>"
+                    html = "<div class='tip-inner " + activeKey + "'><div class='name'>" + d.data.name + "</div><div>"
                             + regionsArr[Number(d.data.region) - 1] + "</div><hr/><div>"
                             + d.data.name_post + "</div><hr/><div><b>Капітал:</b> "
                             + format(d.data.assets) + " грн.</div><div><b>Надходження за 2016р.:</b> "
                             + format(d.data.incomes) + " грн.</div><div><b>Земля у власності:</b> "
                             + format(d.data.land/1000) + " га.</div><div><b>Нерухомість у власності:</b> "
-                            + format(d.data.apartments) + " м2.</div>"
+                            + format(d.data.apartments) + " м2.</div></div>"
                             +(!auto.length? "": "<hr/><div><b>Наявні автомобілі (" + auto.length + "):</b></div>"
                             + auto.map(i=>`<div class='auto-row'>${i.toUpperCase()}</div>`).join('') )
                 } else {console.log(d); }
