@@ -20,13 +20,13 @@
             #filterpanel{
                 font-size: 0.8em;
                 width: 180px;
-                height: 250px;
+                height: 300px;
                 padding: 10px;
                 background: rgba(255, 255, 255, 0.85);
                 position: fixed;
                 z-index: 9000;
                 right: 7px;
-                bottom: 10px;
+                top: 10px;
                 text-align: left;
                 border: 1px solid #bae0ff;
                 border-radius: 3px;
@@ -35,11 +35,22 @@
             #filterpanel input, #filterpanel label {
                 cursor: pointer
             }
+            #filterpanel label:first-child {
+                font-weight:600;
+            }
+            #filterpanel input:checked+ label {
+                color: #d7365d;
+                font-weight: 600;
+            }
+            #filterpanel div {
+                padding: 5px;
+            }
 
             select {
                 width: 180px;
                 height: 30px;
-                cursor: pointer
+                cursor: pointer;
+                font-size: 0.9em;
             }
 
             .d3-tip {
@@ -122,13 +133,14 @@
                     font-size: 0.6em;
                 }
                 #filterpanel {
-                    height: 250px;
+                    height: 285px;
                 }
             }
             @media screen and (max-width: 800px) {
                 body {
                     font-size: 16px;
                     padding-right: 0;
+                    padding-top: 70px;
                 }
                 #filterpanel{
                     width: auto;
@@ -178,7 +190,7 @@
                 <div>
                     <label>Виділити за регіоном</label>
                     <select id="regionSelector" onchange="switchSelectionByRegions(this.value)" name="select">
-                        <option value="" selected>Область не обрано</option>
+                        <option value="">Область не обрано</option>
                     </select>
                 </div>
                 <div>
@@ -273,7 +285,8 @@
                 regionsArr.forEach(function(i, n) {
                     regionSelector
                             .append("option")
-                            .attr("value", n)
+                            .attr("value", n+1)
+                            .property('selected', n === 5)
                             .text(i)
                 });
             getDataAndDraw('assets');
@@ -310,7 +323,7 @@
                 var tip = d3.tip()
                         .attr('class', 'd3-tip')
                         .html((d)=>generateTooltipContent(d, highlightParameter))
-                        .direction('sw')
+                        .direction('se')
                         .offset([0, 3]);
 
                 var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
@@ -370,6 +383,7 @@
                         .on('mouseout', tip.hide);
                 d3.select(`#${id}-wrapper`).classed('isLoading', false);
                 switchSelectionByPosition("j");
+                switchSelectionByRegions('6')
             }
             function splitDataOnGroups(data, key) {
                 allData
@@ -436,6 +450,7 @@
                 return d;
             }
             function switchSelectionByRegions(value) {
+                console.log(value);
             d3.selectAll(".circle").classed("region-active", false);
             d3.selectAll(".region-" + value).classed("region-active", true);
             }
