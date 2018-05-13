@@ -1,3 +1,5 @@
-.idea/
+.git idea/
 node_modules/
 source.csv
+/.idea
+.idea/

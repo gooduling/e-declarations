@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ua">
+    <head>
+        <meta charset="utf-8">
+        <title>E-declaration 2017</title>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <script src="d3-tip.js"></script>
+        <style>
+            body {
+                position: relative;
+                text-align: center;
+                font-family: 'Trebuchet MS', Helvetica, Arial, sans-serif;
+                font-weight: 300;
+                color: #000000;
+                font-size: 20px;
+                line-height: 1.55;
+                padding-right: 210px;
+                padding-bottom: 100px;
+            }
+            #filterpanel{
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255, 255, 255, 0.85);
+                z-index: 9000;
+                text-align: left;
+                border: 1px solid #bae0ff;
+                border-radius: 3px;
+            }
+
+            #filterpanel.relative {
+                position: relative;
+                right: 7px;
+                top: 10px;
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto 20px;
+            }
+            #filterpanel.relative form {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: flex-end;
+                justify-content: space-between;
+            }
+            #filterpanel.relative div {
+                width: 30%;
+            }
+
+            #filterpanel.fixed {
+                position: fixed;
+                right: 7px;
+                top: 10px;
+                width: 180px;
+            }
+
+            #filterpanel input, #filterpanel label {
+                cursor: pointer
+            }
+            #filterpanel label:first-child {
+                font-weight:600;
+            }
+            #filterpanel input:checked+ label {
+                color: #d7365d;
+                font-weight: 600;
+            }
+            #filterpanel div {
+                padding: 5px;
+            }
+
+            #filterpanel select {
+                width: 100%;
+                height: 30px;
+                cursor: pointer;
+                font-size: 0.9em;
+            }
+
+            .d3-tip {
+                background: rgba(51, 51, 51, 0.85);
+                border: 1px solid black;
+                color: #fff;
+                font-size: 0.6em;
+                text-align: left;
+                padding: 0.5em;
+                max-width: 250px;
+            }
+            .name {
+                font-size: 1rem;
+            }
+            .tip-inner.assets div:nth-child(6),
+            .tip-inner.incomes div:nth-child(8),
+            .tip-inner.land div:nth-child(9),
+            .tip-inner.apartments div:nth-child(10) {
+                color: #ff3f6a
+            }
+            .d3-tip b {
+                color: #51c1ff
+            }
+
+            text {
+                font-size: 0.5em;
+                text-anchor: middle;
+                cursor: pointer;
+            }
+
+            .node circle {
+                fill: #fff;
+                cursor: pointer;
+            }
+
+            .node circle.position-active {
+                fill: #ff3f6a;
+                cursor: pointer;
+            }
+
+            circle.depth-0 {
+                fill: #51c1ff;
+                cursor: default;
+            }
+
+            .node circle.region-active {
+                stroke: #000;
+                stroke-width: 3px;
+
+            }
+
+            .node:hover circle:not(.depth-0) {
+                stroke-width: 1.2px;
+                fill: #ffc978;
+            }
+            .viz {
+                display: inline-block;
+                margin: 0px;
+                text-align: center;
+                width: 100%;
+                vertical-align: top; /* to keep from different alignment when one block is loaded but the other is not */
+                /*position: relative;*/
+            }
+            .viz.isLoading {
+                opacity: 0.5;
+            }
+
+            .loading {
+                animation: blinker 1.5s linear infinite;
+                font-size: 1.5em;
+                margin: 50px;
+            }
+
+            @keyframes blinker {
+                50% { opacity: 0; }
+            }
+
+            @media screen and (max-width: 1200px) {
+                body {
+                    /*font-size: 18px;*/
+                }
+                text {
+                    font-size: 0.6em;
+                }
+                #filterpanel {
+                    /*height: 285px;*/
+                }
+            }
+            @media screen and (max-width: 800px) {
+                body {
+                    /*font-size: 16px;*/
+                    padding-right: 0;
+                    padding-top: 70px;
+                }
+                #filterpanel.fixed {
+                    position: relative;
+                    right: 7px;
+                    top: 10px;
+                    width: 100%;
+                    max-width: 600px;
+                    margin: 0 auto;
+                }
+                #filterpanel.fixed form {
+                    width: 100%;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: flex-end;
+                    justify-content: space-between;
+                }
+                #filterpanel.fixed div {
+                    width: 30%;
+                }
+                .viz {
+                    padding-right: 0;
+                }
+                #filterpanel label, #filterpanel select {
+                    width: 100%;
+                }
+            }
+
+            @media screen and (max-width: 600px) {
+                body {
+                    /*font-size: 14px;*/
+                }
+            }
+
+        </style>
+    </head>
+    <body>
+        <div id="filterpanel">
+            <form name="filters">
+                <div>
+                    <label>Виділити за професійною діяльністю</label>
+                    <select id="positionSelector" onchange="switchSelectionByPosition(this.value)">
+                        <option value="0" selected>Без категорії</option>
+                        <option value="1">Mісцева влада</option>
+                        <option value="2" selected>Парламент</option>
+                        <option value="3">Кабмін, міністерства</option>
+                        <option value="4">Суд</option>
+                        <option value="5">Прокуратура</option>
+                        <option value="6">Пенсійний фонд</option>
+                        <option value="7">Рахункова палата</option>
+                        <option value="8">Адміністрація / Секретаріат Президента</option>
+                        <option value="10">НБУ</option>
+                        <option value="11">Вища рада юстиції</option>
+                        <option value="12">Фонд державного майна</option>
+                        <option value="9">Інше</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="viz" id="incomes-wrapper">
+            <h3>Доходи за 2017</h3>
+            <p class="loading" id="incomes-loading-indicator">Завантаження...</p>
+            <svg id="incomes"><g transform="translate(1,1)"></g></svg>
+        </div>
+            <div class="viz" id="land-wrapper">
+                <h3>Земля</h3>
+                <p class="loading" id="land-loading-indicator">Завантаження...</p>
+                <svg id="land"><g transform="translate(1,1)"></g></svg>
+            </div>
+            <div class="viz" id="assets-wrapper">
+                <h3>Майно</h3>
+                <p class="loading" id="assets-loading-indicator">Завантаження...</p>
+                <svg id="assets"><g transform="translate(1,1)"></g></svg>
+            </div>
+        <div class="viz" id="house-wrapper">
+            <h3>Нерухомість</h3>
+            <p class="loading" id="house-loading-indicator">Завантаження...</p>
+            <svg id="house"><g transform="translate(1,1)"></g></svg>
+        </div>
+        <script>
+            const rootUrl = 'https://declarations.com.ua/declaration/nacp_';
+            const regionsArr =  [
+                'Харківська область',
+                'Львівська область',
+                'Чернівецька область',
+                'Донецька область',
+                '!не визначено',
+                'м. Київ',
+                'Миколаївська область',
+                'Дніпропетровська область',
+                'Житомирська область',
+                'Рівненська область',
+                'Одеська область',
+                'Київська область',
+                'Закарпатська область',
+                'Запорізька область',
+                'Черкаська область',
+                'Чернігівська область',
+                'Сумська область',
+                'Волинська область',
+                'Івано-Франківська область',
+                'Херсонська область',
+                'Хмельницька область',
+                'Тернопільська область',
+                'Полтавська область',
+                'Кіровоградська область',
+                'Луганська область',
+                'Вінницька область',
+                'Кримська Автономна Республіка'
+            ];
+            var allData = {};
+            var format = (d)=>d3.format(",d")(d).replace(/\,/gi, ' ');
+            var radiobuttons = document.forms.filters.showParameter;
+            var vizContainers = d3.selectAll('.viz');
+            var filterPanel = document.getElementById('filterpanel');
+            window.addEventListener('scroll', handleScroll);
+            handleScroll(); //For first time
+            function handleScroll() {
+
+                const scrolled = document.body.scrollTop || document.documentElement.scrollTop ;
+                if (scrolled > 200 && scrolled < 4000) {
+                    filterPanel.className= "fixed"
+                } else {
+                    filterPanel.className= "relative"
+                }
+            }
+
+
+
+            //Add options to regional selector
+            var regionSelector = d3.select("#regionSelector");
+                regionsArr.forEach(function(i, n) {
+                    regionSelector
+                            .append("option")
+                            .attr("value", n+1)
+                            //.property('selected', n === 5)
+                            .text(i)
+                });
+                ['land', 'house', 'assets', 'incomes'].forEach(i => getDataAndDraw(i))
+
+
+            function getDataAndDraw(parameter) {
+//                ['vse', 'suddi', 'prokurory', 'misceva_vlada', 'centr_vlada', 'likari', 'inspectory'].forEach(id=>{
+//                    var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
+//                if(!loadingIndicatorElement) {
+//                   // d3.selectAll("#"+id + " > g > *").remove();
+//                    var wrapper = d3.select(`#${id}-wrapper`);
+//                    wrapper.insert('p',':nth-child(2)')
+//                            .attr("class", "loading")
+//                            .attr("id", `${id}-loading-indicator`)
+//                            .text('Завантаження');
+//                }
+//            })
+                vizContainers.classed('isLoading', true);
+                if (!allData[parameter]) {
+                    d3.csv(parameter + '18.csv', formatRow, function (error, data) {
+                        if (error) throw error;
+                        console.log(data)
+                        allData[parameter] = data;
+                        splitDataOnGroups(data, parameter);
+                        rerenderCharts(parameter);
+                        draw(parameter, data, 205, parameter)
+                    });
+
+                } else {
+                    //rerenderCharts(parameter);
+                    draw(parameter, data, 205, parameter)
+                }
+
+            }
+            function draw(id, data, limit, highlightParameter) {
+                d3.selectAll("#"+id + " > g > *").remove();
+
+                var tip = d3.tip()
+                        .attr('class', 'd3-tip')
+                        .html((d)=>generateTooltipContent(d, highlightParameter))
+                        .direction('se')
+                        .offset([0, 3]);
+
+                var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
+                if (loadingIndicatorElement) loadingIndicatorElement.parentNode.removeChild(loadingIndicatorElement);
+
+                var isLargeChart = id === "vse";
+                var normalWidth = isLargeChart ? 700 : 700;
+                var windowWidth = window.innerWidth < normalWidth ? window.innerWidth - (isLargeChart ? 20 : 20) : normalWidth;
+                var svg = d3.select("#"+id);
+                svg
+                    .attr("width", windowWidth)
+                    .attr("height", windowWidth)
+                    .call(tip);
+
+                var width = height = windowWidth;
+
+                var pack = d3.pack()
+                        .size([width - 2, height - 2])
+                        .padding(3);
+                console.log(data)
+                var root = d3.hierarchy({
+                    children: data
+                })
+                .sum(function (d) {
+                    return d[highlightParameter];
+                })
+                .sort(function (a, b) {
+                    return b.value - a.value;
+                });
+                console.log(root, data)
+                // root.children = root.children.filter(function (i, n) {
+                //     return (n < (limit || 100))
+                // });
+                pack(root);
+
+                var node = svg.select("g")
+                        .selectAll("g")
+                        .data(root.descendants())
+                        .enter().append("g")
+                        .attr("transform", function (d) {
+                            return "translate(" + d.x + "," + d.y + ")";
+                        })
+                        .attr("class", "node");
+
+                node.append("circle")
+                    .attr("class", function(d) {return `a${String(d.data.category)}-job circle depth-${d.depth}` })
+                    .attr("r", function (d) {return d.r})
+                    .on('mouseover', (d) =>d.depth ? tip.show(d):null)
+                    .on('mouseout', tip.hide)
+                    .on('click', function(d) {
+                        window.open(rootUrl + d.data.id);
+                    })
+
+                node.append("text")
+                    .text(function (d) {return d.data.shortName})
+                    .style("font-size", function (d) {return d.data.name ? 0.35*Number(d.r) + 'px':'10px'} )//d.data.name ? 0.35*Number(d.r):'10'
+                    .on('mouseover', tip.show)
+                    .on('mouseout', tip.hide);
+
+                d3.select(`#${id}-wrapper`).classed('isLoading', false);
+                switchSelectionByPosition("2");
+            }
+            function splitDataOnGroups(data, key) {
+                allData
+                data.forEach(function (d) {
+                    switch (d.organization_group) {
+                        case "p":
+                            allData[key+'Suddi'] = allData[key+'Suddi'] || [];
+                            allData[key+'Suddi'].push(d);
+                            break;
+                        case "h":
+                            allData[key+'Prokurory'] = allData[key+'Prokurory'] || [];
+                            allData[key+'Prokurory'].push(d);
+                            break;
+                        case "b":
+                            allData[key+'miscevaVlada'] = allData[key+'miscevaVlada'] || [];
+                            allData[key+'miscevaVlada'].push(d);
+                            break;
+                        case "j":
+                            allData[key+'centralnaVlada'] = allData[key+'centralnaVlada'] || [];
+                            allData[key+'centralnaVlada'].push(d);
+                            break;
+                        case "n":
+                            allData[key+'likari'] = allData[key+'likari'] || [];
+                            allData[key+'likari'].push(d);
+                            break;
+                        case "e":
+                            allData[key+'inspectory'] = allData[key+'inspectory'] || [];
+                            allData[key+'inspectory'].push(d);
+                            break;
+                    }
+                });
+            }
+            function rerenderCharts(key) {
+                setTimeout(function() {draw("vse", allData[key], 300, key)}, 0);
+                draw("suddi", allData[key+'Suddi'], 100, key);
+                draw("prokurory", allData[key+'Prokurory'], 100, key);
+                draw("likari", allData[key+'likari'], 100, key);
+                draw("misceva_vlada", allData[key+'miscevaVlada'], 100, key);
+                draw("centr_vlada", allData[key+'centralnaVlada'], 100, key);
+                draw("inspector", allData[key+'inspectory'], 100, key);
+            }
+            function generateTooltipContent (d, activeKey) {
+                let html='';
+                let auto = d.data.transport ? d.data.transport.split(',').filter(i=>i!=='null'): [];
+                if(d.data.name) {
+                    html = "<div class='tip-inner " + activeKey + "'><div class='name'>" + d.data.name + "</div><div>"
+                            + d.data.posada + "</div><hr/><div><b>Рухоме майно (разом з готівкою):</b><nobr> "
+                            + format(d.data.assets) + " грн.</nobr></div>"
+                            +"<div><b>Надходження за 2017р.:</b><nobr> "
+                            + format(d.data.incomes) + " грн.</nobr></div><div><b>Земля у власності:</b><nobr> "
+                            + format(d.data.land/10000) + " га.</nobr></div><div><b>Нерухомість у власності:</b><nobr> "
+                            + format(d.data.house) + " м2.</nobr></div></div>"
+                            +(!auto.length? "": "<hr/><div><b>Наявні автомобілі (" + auto.length + "):</b></div>"
+                            + auto.map(i=>`<div class='auto-row'>${i.toUpperCase()}</div>`).join('') )
+                } else {}
+                return html
+            }
+            function formatRow(d) {
+                if (d.organization_group === 't') d.organization_group = 'b';
+                if (~'dr'.indexOf(d.organization_group)) d.organization_group = 'j';
+//
+                let nameArr = d.name.split(' ')
+                d.shortName = nameArr[0].slice(0, 9) //+ ' ' + nameArr[1][0] + '.';
+                return d;
+            }
+
+            function switchSelectionByPosition(value) {
+                d3.selectAll(".circle").classed("position-active", false);
+                d3.selectAll(".a" + String(value) + '-job').classed("position-active", true);
+            }
+        </script>
+    </body>
+</html>
