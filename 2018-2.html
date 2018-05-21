@@ -117,12 +117,6 @@
                 cursor: default;
             }
 
-            .node circle.region-active {
-                stroke: #000;
-                stroke-width: 3px;
-
-            }
-
             .node:hover circle:not(.depth-0) {
                 stroke-width: 1.2px;
                 fill: #ffc978;
@@ -204,76 +198,62 @@
         <div id="filterpanel">
             <form name="filters">
                 <div>
+                    <label>Режим відображення</label><br/>
+                    <input type="radio" name="showParameter" value='assets' checked id="assets-radio">
+                    <label for="assets-radio">Рухоме майно</label><br/>
+                    <input type="radio" name="showParameter" value='incomes' id="incomes-radio">
+                    <label for="incomes-radio">Надходження</label><br/>
+                    <input type="radio" name="showParameter" value='land' id="land-radio">
+                    <label for="land-radio">Земля</label><br/>
+                    <input type="radio" name="showParameter" value='house' id="apartments-radio">
+                    <label for="apartments-radio">Нерухомість</label><br/>
+                </div>
+                <div>
                     <label>Виділити за професійною діяльністю</label>
                     <select id="positionSelector" onchange="switchSelectionByPosition(this.value)">
-                        <option value="0" selected>Без категорії</option>
-                        <option value="1">Mісцева влада</option>
                         <option value="2" selected>Парламент</option>
-                        <option value="3">Кабмін, міністерства</option>
-                        <option value="4">Суд</option>
-                        <option value="5">Прокуратура</option>
-                        <option value="6">Пенсійний фонд</option>
-                        <option value="7">Рахункова палата</option>
-                        <option value="8">Адміністрація / Секретаріат Президента</option>
-                        <option value="10">НБУ</option>
-                        <option value="11">Вища рада юстиції</option>
-                        <option value="12">Фонд державного майна</option>
-                        <option value="9">Інше</option>
+                        <option value="20">Міністерства, АП</option>
+                        <option value="1">Mісцева влада</option>
+                        <option value="4">Cудді</option>
+                        <option value="5">Прокурори</option>
+
                     </select>
                 </div>
             </form>
         </div>
-        <div class="viz" id="incomes-wrapper">
-            <h3>Доходи за 2017</h3>
-            <p class="loading" id="incomes-loading-indicator">Завантаження...</p>
-            <svg id="incomes"><g transform="translate(1,1)"></g></svg>
+        <div class="viz" id="vse-wrapper">
+            <h3>Всі разом</h3>
+            <p class="loading" id="vse-loading-indicator">Завантаження...</p>
+            <svg id="vse"><g transform="translate(1,1)"></g></svg>
         </div>
-            <div class="viz" id="land-wrapper">
-                <h3>Земля</h3>
-                <p class="loading" id="land-loading-indicator">Завантаження...</p>
-                <svg id="land"><g transform="translate(1,1)"></g></svg>
-            </div>
-            <div class="viz" id="assets-wrapper">
-                <h3>Майно</h3>
-                <p class="loading" id="assets-loading-indicator">Завантаження...</p>
-                <svg id="assets"><g transform="translate(1,1)"></g></svg>
-            </div>
-        <div class="viz" id="house-wrapper">
-            <h3>Нерухомість</h3>
-            <p class="loading" id="house-loading-indicator">Завантаження...</p>
-            <svg id="house"><g transform="translate(1,1)"></g></svg>
+        <div class="viz" id="parlament-wrapper">
+            <h3>Парламент</h3>
+            <p class="loading" id="parlament-loading-indicator">Завантаження...</p>
+            <svg id="parlament"><g transform="translate(1,1)"></g></svg>
         </div>
+        <div class="viz" id="centr_vlada-wrapper">
+            <h3>Міністерства, АП</h3>
+            <p class="loading" id="centr_vlada-loading-indicator">Завантаження...</p>
+            <svg id="centr_vlada"><g transform="translate(1,1)"></g></svg>
+        </div>
+        <div class="viz" id="misceva_vlada-wrapper">
+            <h3>Місцева влада</h3>
+            <p class="loading" id="misceva_vlada-loading-indicator">Завантаження...</p>
+            <svg id="misceva_vlada"><g transform="translate(1,1)"></g></svg>
+        </div>
+        <div class="viz" id="suddi-wrapper">
+            <h3>Судді</h3>
+            <p class="loading" id="suddi-loading-indicator">Завантаження...</p>
+            <svg id="suddi"><g transform="translate(1,1)"></g></svg>
+        </div>
+        <div class="viz" id="prokurory-wrapper">
+            <h3>Прокурори</h3>
+            <p class="loading" id="prokurory-loading-indicator">Завантаження...</p>
+            <svg id="prokurory"><g transform="translate(1,1)"></g></svg>
+        </div>
+
         <script>
             const rootUrl = 'https://declarations.com.ua/declaration/nacp_';
-            const regionsArr =  [
-                'Харківська область',
-                'Львівська область',
-                'Чернівецька область',
-                'Донецька область',
-                '!не визначено',
-                'м. Київ',
-                'Миколаївська область',
-                'Дніпропетровська область',
-                'Житомирська область',
-                'Рівненська область',
-                'Одеська область',
-                'Київська область',
-                'Закарпатська область',
-                'Запорізька область',
-                'Черкаська область',
-                'Чернігівська область',
-                'Сумська область',
-                'Волинська область',
-                'Івано-Франківська область',
-                'Херсонська область',
-                'Хмельницька область',
-                'Тернопільська область',
-                'Полтавська область',
-                'Кіровоградська область',
-                'Луганська область',
-                'Вінницька область',
-                'Кримська Автономна Республіка'
-            ];
             var allData = {};
             var format = (d)=>d3.format(",d")(d).replace(/\,/gi, ' ');
             var radiobuttons = document.forms.filters.showParameter;
@@ -291,46 +271,27 @@
                 }
             }
 
+            //radiobuttons.forEach(item=>item.onclick = (e)=>getDataAndDraw(e.target.value));
+            for (var i=0; i< radiobuttons.length; i++) {
+                radiobuttons[i].onclick = function (e) {
+                    getDataAndDraw(e.target.value);
+                }
+            }
 
-
-            //Add options to regional selector
-            var regionSelector = d3.select("#regionSelector");
-                regionsArr.forEach(function(i, n) {
-                    regionSelector
-                            .append("option")
-                            .attr("value", n+1)
-                            //.property('selected', n === 5)
-                            .text(i)
-                });
-                ['land', 'house', 'assets', 'incomes'].forEach(i => getDataAndDraw(i))
-
+            getDataAndDraw('assets');
 
             function getDataAndDraw(parameter) {
-//                ['vse', 'suddi', 'prokurory', 'misceva_vlada', 'centr_vlada', 'likari', 'inspectory'].forEach(id=>{
-//                    var loadingIndicatorElement = document.getElementById(id + '-loading-indicator');
-//                if(!loadingIndicatorElement) {
-//                   // d3.selectAll("#"+id + " > g > *").remove();
-//                    var wrapper = d3.select(`#${id}-wrapper`);
-//                    wrapper.insert('p',':nth-child(2)')
-//                            .attr("class", "loading")
-//                            .attr("id", `${id}-loading-indicator`)
-//                            .text('Завантаження');
-//                }
-//            })
                 vizContainers.classed('isLoading', true);
                 if (!allData[parameter]) {
-                    d3.csv(parameter + '18.csv', formatRow, function (error, data) {
+                    d3.csv(parameter + '-set.csv', formatRow, function (error, data) {
                         if (error) throw error;
-                        console.log(data)
                         allData[parameter] = data;
                         splitDataOnGroups(data, parameter);
                         rerenderCharts(parameter);
-                        draw(parameter, data, 205, parameter)
                     });
 
                 } else {
-                    //rerenderCharts(parameter);
-                    draw(parameter, data, 205, parameter)
+                    rerenderCharts(parameter);
                 }
 
             }
@@ -360,20 +321,19 @@
                 var pack = d3.pack()
                         .size([width - 2, height - 2])
                         .padding(3);
-                console.log(data)
+
                 var root = d3.hierarchy({
                     children: data
                 })
-                .sum(function (d) {
-                    return d[highlightParameter];
-                })
-                .sort(function (a, b) {
-                    return b.value - a.value;
+                        .sum(function (d) {
+                            return d[highlightParameter];
+                        })
+                        .sort(function (a, b) {
+                            return b.value - a.value;
+                        });
+                root.children = root.children.filter(function (i, n) {
+                    return (n < (limit || 100))
                 });
-                console.log(root, data)
-                // root.children = root.children.filter(function (i, n) {
-                //     return (n < (limit || 100))
-                // });
                 pack(root);
 
                 var node = svg.select("g")
@@ -386,7 +346,7 @@
                         .attr("class", "node");
 
                 node.append("circle")
-                    .attr("class", function(d) {return `a${String(d.data.category)}-job circle depth-${d.depth}` })
+                    .attr("class", function(d) {return `cat${d.data.category}-job circle depth-${d.depth}` })
                     .attr("r", function (d) {return d.r})
                     .on('mouseover', (d) =>d.depth ? tip.show(d):null)
                     .on('mouseout', tip.hide)
@@ -404,32 +364,27 @@
                 switchSelectionByPosition("2");
             }
             function splitDataOnGroups(data, key) {
-                allData
                 data.forEach(function (d) {
-                    switch (d.organization_group) {
-                        case "p":
+                    switch (d.category) {
+                        case "4":
                             allData[key+'Suddi'] = allData[key+'Suddi'] || [];
                             allData[key+'Suddi'].push(d);
                             break;
-                        case "h":
+                        case "5":
                             allData[key+'Prokurory'] = allData[key+'Prokurory'] || [];
                             allData[key+'Prokurory'].push(d);
                             break;
-                        case "b":
-                            allData[key+'miscevaVlada'] = allData[key+'miscevaVlada'] || [];
-                            allData[key+'miscevaVlada'].push(d);
+                        case "1":
+                            allData[key+'MiscevaVlada'] = allData[key+'MiscevaVlada'] || [];
+                            allData[key+'MiscevaVlada'].push(d);
                             break;
-                        case "j":
-                            allData[key+'centralnaVlada'] = allData[key+'centralnaVlada'] || [];
-                            allData[key+'centralnaVlada'].push(d);
+                        case "20":
+                            allData[key+'CentralnaVlada'] = allData[key+'CentralnaVlada'] || [];
+                            allData[key+'CentralnaVlada'].push(d);
                             break;
-                        case "n":
-                            allData[key+'likari'] = allData[key+'likari'] || [];
-                            allData[key+'likari'].push(d);
-                            break;
-                        case "e":
-                            allData[key+'inspectory'] = allData[key+'inspectory'] || [];
-                            allData[key+'inspectory'].push(d);
+                        case "2":
+                            allData[key+'Parlament'] = allData[key+'Parlament'] || [];
+                            allData[key+'Parlament'].push(d);
                             break;
                     }
                 });
@@ -438,14 +393,13 @@
                 setTimeout(function() {draw("vse", allData[key], 300, key)}, 0);
                 draw("suddi", allData[key+'Suddi'], 100, key);
                 draw("prokurory", allData[key+'Prokurory'], 100, key);
-                draw("likari", allData[key+'likari'], 100, key);
-                draw("misceva_vlada", allData[key+'miscevaVlada'], 100, key);
-                draw("centr_vlada", allData[key+'centralnaVlada'], 100, key);
-                draw("inspector", allData[key+'inspectory'], 100, key);
+                draw("parlament", allData[key+'Parlament'], 100, key);
+                draw("misceva_vlada", allData[key+'MiscevaVlada'], 100, key);
+                draw("centr_vlada", allData[key+'CentralnaVlada'], 100, key);
             }
             function generateTooltipContent (d, activeKey) {
                 let html='';
-                let auto = d.data.transport ? d.data.transport.split(',').filter(i=>i!=='null'): [];
+                let auto = d.data.vehicles_names ? d.data.vehicles_names.split('/').filter(i=>i!=='null'): [];
                 if(d.data.name) {
                     html = "<div class='tip-inner " + activeKey + "'><div class='name'>" + d.data.name + "</div><div>"
                             + d.data.posada + "</div><hr/><div><b>Рухоме майно (разом з готівкою):</b><nobr> "
@@ -454,15 +408,10 @@
                             + format(d.data.incomes) + " грн.</nobr></div><div><b>Земля у власності:</b><nobr> "
                             + format(d.data.land/10000) + " га.</nobr></div><div><b>Нерухомість у власності:</b><nobr> "
                             + format(d.data.house) + " м2.</nobr></div></div>"
-                            +(!auto.length? "": "<hr/><div><b>Наявні автомобілі (" + auto.length + "):</b></div>"
-                            + auto.map(i=>`<div class='auto-row'>${i.toUpperCase()}</div>`).join('') )
                 } else {}
                 return html
             }
-            function formatRow(d) {
-                if (d.organization_group === 't') d.organization_group = 'b';
-                if (~'dr'.indexOf(d.organization_group)) d.organization_group = 'j';
-//
+            function formatRow(d) {//
                 let nameArr = d.name.split(' ')
                 d.shortName = nameArr[0].slice(0, 9) //+ ' ' + nameArr[1][0] + '.';
                 return d;
@@ -470,7 +419,7 @@
 
             function switchSelectionByPosition(value) {
                 d3.selectAll(".circle").classed("position-active", false);
-                d3.selectAll(".a" + String(value) + '-job').classed("position-active", true);
+                d3.selectAll(".cat" + value + '-job').classed("position-active", true);
             }
         </script>
     </body>
